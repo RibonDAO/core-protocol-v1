@@ -6,17 +6,22 @@ import { ethers } from "hardhat";
 
 describe("Ribon", function () {
   let ribon: Contract;
+  let donationToken: Contract;
 
   describe("when the contract is deployed", () => {
     beforeEach(async function () {
       const DonationToken = await ethers.getContractFactory("DonationToken");
-      const dt = await DonationToken.deploy();
-      await dt.deployed();
+      donationToken = await DonationToken.deploy();
+      await donationToken.deployed();
 
       const [owner] = await ethers.getSigners();
 
       const RibonToken = await ethers.getContractFactory("Ribon");
-      ribon = await RibonToken.deploy(dt.address, owner.address, owner.address);
+      ribon = await RibonToken.deploy(
+        donationToken.address,
+        owner.address,
+        owner.address
+      );
       await ribon.deployed();
     });
 
@@ -63,6 +68,26 @@ describe("Ribon", function () {
             .to.emit(ribon, "NonProfitRemoved")
             .withArgs(nonProfit.address);
         });
+      });
+
+      describe("when adding pool balance", () => {
+        it("#addDonationPoolBalance", async function () {
+          await donationToken.approve(ribon.address, 10);
+          await ribon.addDonationPoolBalance(10);
+
+          const balance = await donationToken.balanceOf(ribon.address);
+
+          expect(balance).to.equal(10);
+        });
+
+        /*  it("returns an error when amount is smaller than 0", async function () {
+          await donationToken.approve(ribon.address, -10);
+          await ribon.addDonationPoolBalance(-10);
+
+          const balance = await donationToken.balanceOf(ribon.address);
+
+          await expectRevert(balance, "Error: value out-of-bounds");
+        }); */
       });
     });
   });
