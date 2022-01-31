@@ -36,6 +36,14 @@ describe("Ribon", function () {
             await ribon.isNonProfitOnWhitelist(nonProfit.address)
           ).to.equal(true);
         });
+
+        it("Emits NonProfitAdded event", async function () {
+          const [nonProfit] = await ethers.getSigners();
+
+          await expect(ribon.addNonProfitToWhitelist(nonProfit.address))
+            .to.emit(ribon, "NonProfitAdded")
+            .withArgs(nonProfit.address);
+        });
       });
 
       describe("when removing nonProfit from whitelist", () => {
@@ -46,6 +54,14 @@ describe("Ribon", function () {
           expect(
             await ribon.isNonProfitOnWhitelist(nonProfit.address)
           ).to.equal(false);
+        });
+
+        it("Emits NonProfitRemoved event", async function () {
+          const [nonProfit] = await ethers.getSigners();
+
+          await expect(ribon.removeNonProfitFromWhitelist(nonProfit.address))
+            .to.emit(ribon, "NonProfitRemoved")
+            .withArgs(nonProfit.address);
         });
       });
     });
