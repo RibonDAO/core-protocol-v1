@@ -80,14 +80,33 @@ describe("Ribon", function () {
           expect(balance).to.equal(10);
         });
 
-        /*  it("returns an error when amount is smaller than 0", async function () {
+        it("Emits PoolBalanceIncreased event", async function () {
+          const [nonProfit] = await ethers.getSigners();
+          await donationToken.approve(ribon.address, 10);
+
+          await expect(ribon.addDonationPoolBalance(10))
+            .to.emit(ribon, "PoolBalanceIncreased")
+            .withArgs(nonProfit.address, 10);
+        });
+
+        /* it("returns an error when amount is smaller than 0", async function () {
           await donationToken.approve(ribon.address, -10);
-          await ribon.addDonationPoolBalance(-10);
 
-          const balance = await donationToken.balanceOf(ribon.address);
-
-          await expectRevert(balance, "Error: value out-of-bounds");
+          await expect(
+            await ribon.addDonationPoolBalance(-10)
+          ).to.be.revertedWith("Error: value out-of-bounds");
         }); */
+      });
+
+      describe("when updating integration balance", () => {
+        it("increases the integration balance", async function () {
+          const [integration, test] = await ethers.getSigners();
+
+          await ribon.updateIntegrationBalance(test.address, 13);
+          const balance = await donationToken.balanceOf(test.address);
+
+          expect(balance).to.equal(13);
+        });
       });
     });
   });

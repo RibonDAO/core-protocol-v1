@@ -14,12 +14,15 @@ contract Ribon {
   address public integrationCouncil;
   address public nonProfitCouncil;
 
+  uint256 public donationPoolBalance;
+
   mapping(address => bool) public nonProfits;
+  mapping(address => uint256) public integrations;
 
   event NonProfitAdded(address nonProfit);
   event NonProfitRemoved(address nonProfit);
-
   event PoolBalanceIncreased(address promoter, uint256 amount);
+  event IntegrationBalanceUpdated(address integration, uint256 mount);
 
   constructor(
     address _donationToken,
@@ -53,6 +56,27 @@ contract Ribon {
     donationToken.safeTransferFrom(msg.sender, address(this), _amount);
 
     emit PoolBalanceIncreased(msg.sender, _amount);
+  }
+
+  // TODO: create an ownerOff function to validate if is integrationCouncil
+  function updateIntegrationBalance(address _integration, uint256 _amount)
+    public
+  {
+    unchecked {
+      require(
+        donationPoolBalance - _amount >= 0,
+        "Donation pool balance should be bigger than 0"
+      );
+    }
+    require(
+      msg.sender == integrationCouncil,
+      "You are not on the integration council."
+    );
+    unchecked {
+      donationPoolBalance -= _amount;
+    }
+    integrations[_integration] += _amount;
+    emit IntegrationBalanceUpdated(_integration, _amount);
   }
 
   function isNonProfitOnWhitelist(address _nonProfit)
