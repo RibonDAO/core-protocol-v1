@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
+
 pragma solidity ^0.8.11;
 pragma abicoder v2;
 
@@ -23,6 +25,7 @@ contract Ribon {
   event NonProfitRemoved(address nonProfit);
   event PoolBalanceIncreased(address promoter, uint256 amount);
   event IntegrationBalanceUpdated(address integration, uint256 mount);
+  event DonationAdded(address user, address integration, address nonProfit, uint256 amount);
 
   constructor(
     address _donationToken,
@@ -72,11 +75,37 @@ contract Ribon {
       msg.sender == integrationCouncil,
       "You are not on the integration council."
     );
+
     unchecked {
       donationPoolBalance -= _amount;
     }
+
     integrations[_integration] += _amount;
+
     emit IntegrationBalanceUpdated(_integration, _amount);
+  }
+
+  function donateThroughIntegration(
+      address _nonProfit,
+      // TODO: change address of user to email (hashed email)
+      address _user,
+      uint256 _amount
+  ) public payable {
+      require(
+          nonProfits[_nonProfit] == true,
+          "Destination is not on non profit whitelist"
+      );
+      // require(
+      //     integrations[msg.sender] > _amount,
+      //     "Integration balance should be bigger than amount"
+      // );
+      require(_amount > 0, "Amount should be bigger than 0");
+
+      // integrations[msg.sender] -= _amount;
+
+      donationToken.safeTransfer(_nonProfit, _amount);
+
+      emit DonationAdded(_user, msg.sender, _nonProfit, _amount);
   }
 
   function isNonProfitOnWhitelist(address _nonProfit)
@@ -85,6 +114,14 @@ contract Ribon {
     returns (bool)
   {
     return nonProfits[_nonProfit];
+  }
+
+  function getIntegrationBalance(address _integration)
+    public
+    view
+    returns (uint256)
+  {
+    return integrations[_integration];
   }
 
   function getIntegrationCouncil() public view returns (address) {
