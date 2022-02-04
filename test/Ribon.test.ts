@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: <SPDX-License>
 
 import { expect } from "chai";
-import { Contract } from "ethers";
 import { ethers } from "hardhat";
+import { Contract, BigNumber } from "ethers";
 
 describe("Ribon", function () {
   let ribon: Contract;
@@ -31,7 +31,7 @@ describe("Ribon", function () {
       expect(await ribon.getIntegrationCouncil()).to.equal(owner.address);
     });
 
-    describe("Integration Council", () => {
+    describe("Non Profit Council", () => {
       describe("when adding nonProfit to whitelist", () => {
         it("#isNonProfitOnWhitelist", async function () {
           const [nonProfit] = await ethers.getSigners();
@@ -89,13 +89,11 @@ describe("Ribon", function () {
             .withArgs(nonProfit.address, 10);
         });
 
-        /* it("returns an error when amount is smaller than 0", async function () {
-          await donationToken.approve(ribon.address, -10);
-
+        it("returns an error when amount is smaller than 0", async function () {
           await expect(
-            await ribon.addDonationPoolBalance(-10)
-          ).to.be.revertedWith("Error: value out-of-bounds");
-        }); */
+            ribon.addDonationPoolBalance(ethers.BigNumber.from("-10"))
+          ).to.be.reverted;
+        });
       });
 
       describe("when updating integration balance", () => {
