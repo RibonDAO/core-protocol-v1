@@ -99,13 +99,13 @@ contract Ribon {
       nonProfits[_nonProfit] == true,
       "Destination is not on non profit whitelist"
     );
-    // require(
-    //     integrations[msg.sender] > _amount,
-    //     "Integration balance should be bigger than amount"
-    // );
+    require(
+        integrations[msg.sender] > _amount,
+        "Integration balance should be bigger than amount"
+    );
     require(_amount > 0, "Amount should be bigger than 0");
 
-    // integrations[msg.sender] -= _amount;
+    integrations[msg.sender] -= _amount;
 
     donationToken.safeTransfer(_nonProfit, _amount);
 
