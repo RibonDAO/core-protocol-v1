@@ -100,7 +100,7 @@ contract Ribon {
       "Destination is not on non profit whitelist"
     );
     require(
-        integrations[msg.sender] > _amount,
+        integrations[msg.sender] >= _amount,
         "Integration balance should be bigger than amount"
     );
     require(_amount > 0, "Amount should be bigger than 0");
