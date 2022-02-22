@@ -25,7 +25,7 @@ contract Ribon {
   event PoolBalanceIncreased(address promoter, uint256 amount);
   event IntegrationBalanceUpdated(address integration, uint256 amount);
   event DonationAdded(
-    address user,
+    bytes32 user,
     address integration,
     address nonProfit,
     uint256 amount
@@ -91,8 +91,7 @@ contract Ribon {
 
   function donateThroughIntegration(
     address _nonProfit,
-    // TODO: change address of user to email (hashed email)
-    address _user,
+    bytes32 _user,
     uint256 _amount
   ) public payable {
     require(
