@@ -65,7 +65,6 @@ contract Ribon {
     emit PoolBalanceIncreased(msg.sender, _amount);
   }
 
-  // TODO: create an ownerOff function to validate if is integrationCouncil
   function updateIntegrationBalance(address _integration, uint256 _amount)
     public
   {
