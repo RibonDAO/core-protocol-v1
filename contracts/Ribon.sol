@@ -57,7 +57,7 @@ contract Ribon {
     emit NonProfitRemoved(_nonProfit);
   }
 
-  function addDonationPoolBalance(uint256 _amount) public payable {
+  function addDonationPoolBalance(uint256 _amount) public {
     require(_amount > 0, "Amount should be bigger than 0");
 
     donationToken.safeTransferFrom(msg.sender, address(this), _amount);
@@ -68,20 +68,17 @@ contract Ribon {
   function updateIntegrationBalance(address _integration, uint256 _amount)
     public
   {
-    unchecked {
-      require(
-        donationPoolBalance - _amount >= 0,
-        "Donation pool balance should be bigger than 0"
-      );
-    }
     require(
       msg.sender == integrationCouncil,
       "You are not on the integration council."
     );
 
-    unchecked {
-      donationPoolBalance -= _amount;
-    }
+    require(
+      donationPoolBalance - _amount >= 0,
+      "Donation pool balance should be bigger than 0"
+    );
+
+    donationPoolBalance -= _amount;
 
     integrations[_integration] += _amount;
 
@@ -92,7 +89,7 @@ contract Ribon {
     address _nonProfit,
     bytes32 _user,
     uint256 _amount
-  ) public payable {
+  ) public {
     require(
       nonProfits[_nonProfit] == true,
       "Destination is not on non profit whitelist"
@@ -108,25 +105,5 @@ contract Ribon {
     donationToken.safeTransfer(_nonProfit, _amount);
 
     emit DonationAdded(_user, msg.sender, _nonProfit, _amount);
-  }
-
-  function isNonProfitOnWhitelist(address _nonProfit)
-    public
-    view
-    returns (bool)
-  {
-    return nonProfits[_nonProfit];
-  }
-
-  function getIntegrationBalance(address _integration)
-    public
-    view
-    returns (uint256)
-  {
-    return integrations[_integration];
-  }
-
-  function getIntegrationCouncil() public view returns (address) {
-    return integrationCouncil;
   }
 }
