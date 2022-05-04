@@ -7,6 +7,7 @@ import { Contract, BigNumber } from "ethers";
 describe("Ribon", function () {
   let ribon: Contract;
   let donationToken: Contract;
+  const user = "0xd229e8696a794bb2669821b444690c05f1faa8337ffba5053914b66c99dd39e0";
 
   describe("when the contract is deployed", () => {
     beforeEach(async function () {
@@ -97,7 +98,7 @@ describe("Ribon", function () {
       });
 
       describe("when updating integration balance", () => {
-        it("can increase the integration balance", async function () {
+        it("increases the integration balance", async function () {
           const [integration] = await ethers.getSigners();
 
           await ribon.updateIntegrationBalance(integration.address, 13);
@@ -117,8 +118,10 @@ describe("Ribon", function () {
       });
 
       describe("when donating through integration", () => {
-        it("increases the integration balance", async function () {
-          const [_, nonProfit, user] = await ethers.getSigners();
+        it("decreases the integration balance", async function () {
+          const [integration, nonProfit] = await ethers.getSigners();
+
+          await ribon.updateIntegrationBalance(integration.address, 20);
 
           await ribon.addNonProfitToWhitelist(nonProfit.address);
 
@@ -128,7 +131,7 @@ describe("Ribon", function () {
 
           await ribon.donateThroughIntegration(
             nonProfit.address,
-            user.address,
+            user,
             10
           );
 
@@ -136,7 +139,9 @@ describe("Ribon", function () {
         });
 
         it("emits DonationAdded event", async function () {
-          const [integration, nonProfit, user] = await ethers.getSigners();
+          const [integration, nonProfit] = await ethers.getSigners();
+          
+          await ribon.updateIntegrationBalance(integration.address, 20);
 
           await ribon.addNonProfitToWhitelist(nonProfit.address);
 
@@ -145,10 +150,10 @@ describe("Ribon", function () {
           await donationToken.transfer(ribon.address, 10);
 
           await expect(
-            ribon.donateThroughIntegration(nonProfit.address, user.address, 10)
+            ribon.donateThroughIntegration(nonProfit.address, user, 10)
           )
             .to.emit(ribon, "DonationAdded")
-            .withArgs(user.address, integration.address, nonProfit.address, 10);
+            .withArgs(user, integration.address, nonProfit.address, 10);
         });
       });
     });
