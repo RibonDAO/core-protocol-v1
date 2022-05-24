@@ -15,29 +15,29 @@ describe("Ribon", function () {
       donationToken = await DonationToken.deploy();
       await donationToken.deployed();
 
-      const [owner] = await ethers.getSigners();
+      const [owner, nonProfitCouncil, integrationCouncil] = await ethers.getSigners();
 
       const RibonToken = await ethers.getContractFactory("Ribon");
       ribon = await RibonToken.deploy(
         donationToken.address,
-        owner.address,
-        owner.address
+        integrationCouncil.address,
+        nonProfitCouncil.address
       );
       await ribon.deployed();
     });
 
     it("returns the contract with the correct params", async function () {
-      const [owner] = await ethers.getSigners();
+      const [owner, nonProfitCouncil, integrationCouncil] = await ethers.getSigners();
 
-      expect(await ribon.getNonProfitCouncil()).to.equal(owner.address);
-      expect(await ribon.getIntegrationCouncil()).to.equal(owner.address);
+      expect(await ribon.getNonProfitCouncil()).to.equal(nonProfitCouncil.address);
+      expect(await ribon.getIntegrationCouncil()).to.equal(integrationCouncil.address);
     });
 
     describe("Non Profit Council", () => {
       describe("when adding nonProfit to whitelist", () => {
         it("#addNonProfitOnWhitelist", async function () {
-          const [nonProfit] = await ethers.getSigners();
-          await ribon.addNonProfitToWhitelist(nonProfit.address);
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit] = await ethers.getSigners();
+          await ribon.connect(nonProfitCouncil).addNonProfitToWhitelist(nonProfit.address);
 
           expect(
             await ribon.isNonProfitOnWhitelist(nonProfit.address)
@@ -45,9 +45,9 @@ describe("Ribon", function () {
         });
 
         it("emits NonProfitAdded event", async function () {
-          const [nonProfit] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit] = await ethers.getSigners();
 
-          await expect(ribon.addNonProfitToWhitelist(nonProfit.address))
+          await expect(ribon.connect(nonProfitCouncil).addNonProfitToWhitelist(nonProfit.address))
             .to.emit(ribon, "NonProfitAdded")
             .withArgs(nonProfit.address);
         });
@@ -55,8 +55,8 @@ describe("Ribon", function () {
 
       describe("when removing nonProfit from whitelist", () => {
         it("#removeNonProfitFromWhitelist", async function () {
-          const [nonProfit] = await ethers.getSigners();
-          await ribon.removeNonProfitFromWhitelist(nonProfit.address);
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit] = await ethers.getSigners();
+          await ribon.connect(nonProfitCouncil).removeNonProfitFromWhitelist(nonProfit.address);
 
           expect(
             await ribon.isNonProfitOnWhitelist(nonProfit.address)
@@ -64,9 +64,9 @@ describe("Ribon", function () {
         });
 
         it("emits NonProfitRemoved event", async function () {
-          const [nonProfit] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit] = await ethers.getSigners();
 
-          await expect(ribon.removeNonProfitFromWhitelist(nonProfit.address))
+          await expect(ribon.connect(nonProfitCouncil).removeNonProfitFromWhitelist(nonProfit.address))
             .to.emit(ribon, "NonProfitRemoved")
             .withArgs(nonProfit.address);
         });
@@ -106,10 +106,10 @@ describe("Ribon", function () {
         });
 
         it("increases the integration balance", async function () {
-          const [integration] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
           
 
-          await ribon.addIntegrationBalance(integration.address, 10);
+          await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
 
           expect(
             await ribon.getIntegrationBalance(integration.address)
@@ -117,9 +117,9 @@ describe("Ribon", function () {
         });
 
         it("emits IntegrationBalanceUpdated event", async function () {
-          const [integration] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
 
-          await expect(ribon.addIntegrationBalance(integration.address, 10))
+          await expect(ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10))
             .to.emit(ribon, "IntegrationBalanceAdded")
             .withArgs(integration.address, 10);
         });
@@ -127,15 +127,15 @@ describe("Ribon", function () {
       
       describe("when remove integration balance", () => {
         beforeEach(async () =>{
-          const [integration] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
           await donationToken.approve(ribon.address, 10);
           await ribon.addDonationPoolBalance(10);
-          await ribon.addIntegrationBalance(integration.address, 10);
+          await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
         });
 
         it("decreasses the integration balance", async function () {
-          const [integration] = await ethers.getSigners();
-          await ribon.removeIntegrationBalance(integration.address, 10);
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
+          await ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 10);
 
           expect(
             await ribon.getIntegrationBalance(integration.address)
@@ -143,9 +143,9 @@ describe("Ribon", function () {
         });
 
         it("emits IntegrationBalanceUpdated event", async function () {
-          const [integration] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
 
-          await expect(ribon.removeIntegrationBalance(integration.address, 10))
+          await expect(ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 10))
             .to.emit(ribon, "IntegrationBalanceRemoved")
             .withArgs(integration.address, 10);
         });
@@ -153,17 +153,17 @@ describe("Ribon", function () {
 
       describe("when donating through integration", () => {
         beforeEach(async () =>{
-          const [integration, nonProfit] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
           await donationToken.approve(ribon.address, 10);
           await ribon.addDonationPoolBalance(10);
-          await ribon.addNonProfitToWhitelist(nonProfit.address);
-          await ribon.addIntegrationBalance(integration.address, 10);
+          await ribon.connect(nonProfitCouncil).addNonProfitToWhitelist(nonProfit.address);
+          await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
         });
 
         it("decreases the integration balance", async function () {
-          const [integration, nonProfit] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
 
-          await ribon.donateThroughIntegration(
+          await ribon.connect(integration).donateThroughIntegration(
             nonProfit.address,
             user,
             10
@@ -173,10 +173,10 @@ describe("Ribon", function () {
         });
 
         it("emits DonationAdded event", async function () {
-          const [integration, nonProfit] = await ethers.getSigners();
+          const [owner, nonProfitCouncil, integrationCouncil, nonProfit, integration] = await ethers.getSigners();
 
           await expect(
-            ribon.donateThroughIntegration(nonProfit.address, user, 10)
+            ribon.connect(integration).donateThroughIntegration(nonProfit.address, user, 10)
           )
             .to.emit(ribon, "DonationAdded")
             .withArgs(user, integration.address, nonProfit.address, 10);
