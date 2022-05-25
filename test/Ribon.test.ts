@@ -139,7 +139,7 @@ describe("Ribon", function () {
         });
         
         describe("when amount is 0", () => {
-          it("returns an error when amount is 0", async function () {
+          it("reverts the transaction", async function () {
             await expect(
               ribon.addDonationPoolBalance(ethers.BigNumber.from("0"))
             ).to.be.revertedWith("Amount must be greater than 0.");
@@ -147,10 +147,11 @@ describe("Ribon", function () {
         });
 
         describe("when have insuficient funds", () => {
-          it("returns an error when amount is 0", async function () {
+          it("reverts the transaction", async function () {
+            await donationToken.approve(nonProfitCouncil.address, 10);
             await expect(
-              ribon.connect(nonProfitCouncil).addDonationPoolBalance(ethers.BigNumber.from("0"))
-            ).to.be.revertedWith("Amount must be greater than 0.");
+              ribon.connect(nonProfitCouncil).addDonationPoolBalance(ethers.BigNumber.from("10"))
+            ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
           });
         });
       });
