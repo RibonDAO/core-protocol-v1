@@ -59,7 +59,7 @@ contract Ribon {
   }
 
   function addDonationPoolBalance(uint256 _amount) public {
-    require(_amount > 0, "Amount should be bigger than 0");
+    require(_amount > 0, "Amount must be greater than 0.");
 
     donationToken.safeTransferFrom(msg.sender, address(this), _amount);
     donationPoolBalance += _amount;
@@ -131,6 +131,10 @@ contract Ribon {
     emit DonationAdded(_user, msg.sender, _nonProfit, _amount);
   }
 
+  function getDonationPoolBalance() public view returns (uint256) {
+    return donationPoolBalance;
+  }
+  
   function getIntegrationCouncil() public view returns (address) {
     return integrationCouncil;
   }
