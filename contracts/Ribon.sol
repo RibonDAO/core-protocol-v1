@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.11;
+pragma solidity 0.8.14;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -23,7 +23,8 @@ contract Ribon {
   event NonProfitAdded(address nonProfit);
   event NonProfitRemoved(address nonProfit);
   event PoolBalanceIncreased(address promoter, uint256 amount);
-  event IntegrationBalanceUpdated(address integration, uint256 amount);
+  event IntegrationBalanceAdded(address integration, uint256 amount);
+  event IntegrationBalanceRemoved(address integration, uint256 amount);
   event DonationAdded(
     bytes32 user,
     address integration,
@@ -61,28 +62,51 @@ contract Ribon {
     require(_amount > 0, "Amount should be bigger than 0");
 
     donationToken.safeTransferFrom(msg.sender, address(this), _amount);
+    donationPoolBalance += _amount;
 
     emit PoolBalanceIncreased(msg.sender, _amount);
   }
 
-  function updateIntegrationBalance(address _integration, uint256 _amount)
+  function addIntegrationBalance(address _integration, uint256 _amount)
     public
   {
     require(
       msg.sender == integrationCouncil,
-      "You are not on the integration council."
+      "Not the integration council."
     );
+    unchecked{
+      require(
+        donationPoolBalance >= _amount,
+        "Balance should be bigger than amount"
+      );
+      require(_amount > 0, "Amount should be bigger than 0");
 
+      donationPoolBalance -= _amount;
+      integrations[_integration] += _amount;
+    }
+
+    emit IntegrationBalanceAdded(_integration, _amount);
+  }
+
+  function removeIntegrationBalance(address _integration, uint256 _amount)
+    public
+  {
     require(
-      donationPoolBalance - _amount >= 0,
-      "Donation pool balance should be bigger than 0"
+      msg.sender == integrationCouncil,
+      "Not on the integration council."
     );
+    unchecked{
+      require(
+        integrations[_integration] >= _amount,
+        "Balance should be bigger than amount"
+      );
+      require(_amount > 0, "Amount should be bigger than 0");
 
-    donationPoolBalance -= _amount;
+      donationPoolBalance += _amount;
+      integrations[_integration] -= _amount;
+    }
 
-    integrations[_integration] += _amount;
-
-    emit IntegrationBalanceUpdated(_integration, _amount);
+    emit IntegrationBalanceRemoved(_integration, _amount);
   }
 
   function donateThroughIntegration(
@@ -92,11 +116,11 @@ contract Ribon {
   ) public {
     require(
       nonProfits[_nonProfit] == true,
-      "Destination is not on non profit whitelist"
+      "Is not on non profit whitelist"
     );
     require(
         integrations[msg.sender] >= _amount,
-        "Integration balance should be bigger than amount"
+        "Balance should > amount"
     );
     require(_amount > 0, "Amount should be bigger than 0");
 
@@ -105,5 +129,21 @@ contract Ribon {
     donationToken.safeTransfer(_nonProfit, _amount);
 
     emit DonationAdded(_user, msg.sender, _nonProfit, _amount);
+  }
+
+  function getIntegrationCouncil() public view returns (address) {
+    return integrationCouncil;
+  }
+
+  function getNonProfitCouncil() public view returns (address) {
+    return nonProfitCouncil;
+  }
+
+  function isNonProfitOnWhitelist(address _nonProfit) public view returns (bool) {
+    return nonProfits[_nonProfit];
+  }
+
+  function getIntegrationBalance(address _integration) public view returns (uint256) {
+    return integrations[_integration];
   }
 }
