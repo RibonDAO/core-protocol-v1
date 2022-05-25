@@ -72,7 +72,7 @@ contract Ribon {
   {
     require(
       msg.sender == integrationCouncil,
-      "Not on the integration council."
+      "Not the integration council."
     );
     unchecked{
       require(
