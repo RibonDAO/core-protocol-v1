@@ -79,7 +79,7 @@ contract Ribon {
         donationPoolBalance >= _amount,
         "Balance should be bigger than amount"
       );
-      require(_amount > 0, "Amount should be bigger than 0");
+      require(_amount > 0, "Amount must be greater than 0");
 
       donationPoolBalance -= _amount;
       integrations[_integration] += _amount;

@@ -178,6 +178,14 @@ describe("Ribon", function () {
                 .to.emit(ribon, "IntegrationBalanceAdded")
                 .withArgs(integration.address, 10);
             });
+
+            describe("when amount is 0", () => {
+              it("reverts the transaction", async function () {
+                await expect(
+                  ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 0)
+                ).to.be.revertedWith("Amount must be greater than 0");
+              });
+            });
           });
 
           describe("when you do not have enough balance", () => {
