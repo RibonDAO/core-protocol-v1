@@ -192,13 +192,13 @@ describe("Ribon", function () {
             it("reverts the transaction", async function () {
               await expect(
                 ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10)
-              ).to.be.revertedWith("Balance should be bigger than amount");
+              ).to.be.revertedWith("Balance must be greater than amount");
             });
           });
         });
 
         describe("when you are not the integration council", () => {
-          it("#addIntegrationBalance", async function () { 
+          it("reverts the transaction", async function () { 
             await expect(
               ribon.connect(nonProfitCouncil).addIntegrationBalance(integration.address, 10)
             ).to.be.revertedWith("Not the integration council.");
@@ -207,30 +207,58 @@ describe("Ribon", function () {
       });
 
       describe("#removeIntegrationBalance", () => {
-        beforeEach(async () =>{
-          await donationToken.approve(ribon.address, 10);
-          await ribon.connect(promoter).addDonationPoolBalance(10);
-          await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
+        describe("when you are the integration council", () => {
+          beforeEach(async () =>{
+            await donationToken.approve(ribon.address, 10);
+            await ribon.connect(promoter).addDonationPoolBalance(10);
+            await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
+          });
+          
+          describe("when the integration have enough balance", () => {      
+            it("decreasses the integration balance", async function () {
+              await ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 10);
+      
+              expect(
+                await ribon.getIntegrationBalance(integration.address)
+              ).to.equal(0);
+            });
+      
+            it("emits IntegrationBalanceUpdated event", async function () {
+              await expect(ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 10))
+                .to.emit(ribon, "IntegrationBalanceRemoved")
+                .withArgs(integration.address, 10);
+            });
+          });
+
+          describe("when the integration have enough balance", () => {
+            it("reverts the transaction", async function () {
+              await expect(
+                ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 100)
+              ).to.be.revertedWith("Balance must be greater than amount");
+            });
+          });
+
+          describe("when the amount is 0", () => {
+            it("reverts the transaction", async function () {
+              await expect(
+                ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 0)
+              ).to.be.revertedWith("Amount must be greater than 0");
+            });
+          });
         });
-  
-        it("decreasses the integration balance", async function () {
-          await ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 10);
-  
-          expect(
-            await ribon.getIntegrationBalance(integration.address)
-          ).to.equal(0);
-        });
-  
-        it("emits IntegrationBalanceUpdated event", async function () {
-          await expect(ribon.connect(integrationCouncil).removeIntegrationBalance(integration.address, 10))
-            .to.emit(ribon, "IntegrationBalanceRemoved")
-            .withArgs(integration.address, 10);
+
+        describe("when you are not the integration council", () => {
+          it("reverts the transaction", async function () {
+            await expect(
+              ribon.connect(integration).removeIntegrationBalance(integration.address, 10)
+            ).to.be.revertedWith("Not the integration council.");
+          });
         });
       });
     });
 
     describe("Integration", () => {
-      describe("when donating through integration", () => {
+      describe("#donateThroughIntegration", () => {
         beforeEach(async () =>{
           await donationToken.approve(ribon.address, 10);
           await ribon.addDonationPoolBalance(10);
@@ -238,23 +266,55 @@ describe("Ribon", function () {
           await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
         });
 
-        it("decreases the integration balance", async function () {
-          await ribon.connect(integration).donateThroughIntegration(
-            nonProfit.address,
-            user,
-            10
-          );
+        describe("when the non profit is on whitelist", () => {
+          describe("when the integration have enough balance", () => {
+            it("decreases the integration balance", async function () {
+              await ribon.connect(integration).donateThroughIntegration(
+                nonProfit.address,
+                user,
+                10
+              );
 
-          expect(await donationToken.balanceOf(nonProfit.address)).to.equal(10);
+              expect(await donationToken.balanceOf(nonProfit.address)).to.equal(10);
+            });
+
+            it("emits DonationAdded event", async function () {
+
+              await expect(
+                ribon.connect(integration).donateThroughIntegration(nonProfit.address, user, 10)
+              )
+                .to.emit(ribon, "DonationAdded")
+                .withArgs(user, integration.address, nonProfit.address, 10);
+            });
+          });
+
+          describe("when the integration don't have enough balance", () => {
+            it("reverts the transaction", async function () {
+              await expect(
+                ribon.connect(integration).donateThroughIntegration(nonProfit.address, user, 100)
+              ).to.be.revertedWith("Balance must > amount");
+            });
+          });
+
+          describe("when the amount is 0", () => {
+            it("reverts the transaction", async function () {
+              await expect(
+                ribon.connect(integration).donateThroughIntegration(nonProfit.address, user, 0)
+              ).to.be.revertedWith("Amount must be greater than 0");
+            });
+          });
         });
-
-        it("emits DonationAdded event", async function () {
-
+      });
+      
+      describe("when non profit is not on whitelist", () => {
+        it("#donateThroughIntegration", async function () { 
           await expect(
-            ribon.connect(integration).donateThroughIntegration(nonProfit.address, user, 10)
-          )
-            .to.emit(ribon, "DonationAdded")
-            .withArgs(user, integration.address, nonProfit.address, 10);
+            ribon.connect(integration).donateThroughIntegration(
+              integration.address,
+              user,
+              10
+            )
+          ).to.be.revertedWith("Is not on non profit whitelist");
         });
       });
     });

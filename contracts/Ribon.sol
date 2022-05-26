@@ -77,7 +77,7 @@ contract Ribon {
     unchecked{
       require(
         donationPoolBalance >= _amount,
-        "Balance should be bigger than amount"
+        "Balance must be greater than amount"
       );
       require(_amount > 0, "Amount must be greater than 0");
 
@@ -93,14 +93,14 @@ contract Ribon {
   {
     require(
       msg.sender == integrationCouncil,
-      "Not on the integration council."
+      "Not the integration council."
     );
     unchecked{
       require(
         integrations[_integration] >= _amount,
-        "Balance should be bigger than amount"
+        "Balance must be greater than amount"
       );
-      require(_amount > 0, "Amount should be bigger than 0");
+      require(_amount > 0, "Amount must be greater than 0");
 
       donationPoolBalance += _amount;
       integrations[_integration] -= _amount;
@@ -119,10 +119,10 @@ contract Ribon {
       "Is not on non profit whitelist"
     );
     require(
-        integrations[msg.sender] >= _amount,
-        "Balance should > amount"
+      integrations[msg.sender] >= _amount,
+      "Balance must > amount"
     );
-    require(_amount > 0, "Amount should be bigger than 0");
+    require(_amount > 0, "Amount must be greater than 0");
 
     integrations[msg.sender] -= _amount;
 
