@@ -307,7 +307,7 @@ describe("Ribon", function () {
       });
       
       describe("when non profit is not on whitelist", () => {
-        it("#donateThroughIntegration", async function () { 
+        it("reverts the transaction", async function () { 
           await expect(
             ribon.connect(integration).donateThroughIntegration(
               integration.address,
