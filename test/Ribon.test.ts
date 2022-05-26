@@ -141,7 +141,7 @@ describe("Ribon", function () {
         describe("when amount is 0", () => {
           it("reverts the transaction", async function () {
             await expect(
-              ribon.addDonationPoolBalance(ethers.BigNumber.from("0"))
+              ribon.addDonationPoolBalance(0)
             ).to.be.revertedWith("Amount must be greater than 0.");
           });
         });
@@ -150,7 +150,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await donationToken.approve(nonProfitCouncil.address, 10);
             await expect(
-              ribon.connect(nonProfitCouncil).addDonationPoolBalance(ethers.BigNumber.from("10"))
+              ribon.connect(nonProfitCouncil).addDonationPoolBalance(10)
             ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
           });
         });
@@ -159,25 +159,36 @@ describe("Ribon", function () {
     
     describe("Integration council", () => {
       describe("#addIntegrationBalance", () => {
-        beforeEach(async () =>{
-          await donationToken.approve(ribon.address, 10);
-          await ribon.addDonationPoolBalance(10);
+        describe("when you are the integration council", () => {
+          describe("when you have enough balance", () => {
+            beforeEach(async () =>{
+              await donationToken.approve(ribon.address, 10);
+              await ribon.addDonationPoolBalance(10);
+            });
+
+            it("increasses the integration balance", async function () {
+              await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
+              expect(
+                await ribon.getIntegrationBalance(integration.address)
+              ).to.equal(10);
+            });
+      
+            it("emits IntegrationBalanceAdded event", async function () {
+              await expect(ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10))
+                .to.emit(ribon, "IntegrationBalanceAdded")
+                .withArgs(integration.address, 10);
+            });
+          });
+
+          describe("when you do not have enough balance", () => {
+            it("reverts the transaction", async function () {
+              await expect(
+                ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10)
+              ).to.be.revertedWith("Balance should be bigger than amount");
+            });
+          });
         });
-  
-        it("increasses the integration balance", async function () {
-          await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
-  
-          expect(
-            await ribon.getIntegrationBalance(integration.address)
-          ).to.equal(10);
-        });
-  
-        it("emits IntegrationBalanceAdded event", async function () {
-          await expect(ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10))
-            .to.emit(ribon, "IntegrationBalanceAdded")
-            .withArgs(integration.address, 10);
-        });
-  
+
         describe("when you are not the integration council", () => {
           it("#addIntegrationBalance", async function () { 
             await expect(
