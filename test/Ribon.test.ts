@@ -9,6 +9,7 @@ describe("Ribon", function () {
   let ribon: Contract;
   let donationToken: Contract;
 
+  let governanceCouncil: SignerWithAddress;
   let nonProfitCouncil: SignerWithAddress;
   let integrationCouncil: SignerWithAddress;
   let nonProfit: SignerWithAddress;
@@ -18,8 +19,9 @@ describe("Ribon", function () {
 
   describe("when the contract is deployed", () => {
     beforeEach(async function () {
-      const [_promoter, _nonProfitCouncil, _integrationCouncil, _nonProfit, _integration] = await ethers.getSigners();
+      const [_promoter, _governanceCouncil, _nonProfitCouncil, _integrationCouncil, _nonProfit, _integration] = await ethers.getSigners();
       
+      governanceCouncil = _governanceCouncil;
       nonProfitCouncil = _nonProfitCouncil;
       integrationCouncil = _integrationCouncil;
       nonProfit = _nonProfit;
@@ -33,6 +35,7 @@ describe("Ribon", function () {
       const RibonToken = await ethers.getContractFactory("Ribon");
       ribon = await RibonToken.deploy(
         donationToken.address,
+        governanceCouncil.address,
         integrationCouncil.address,
         nonProfitCouncil.address
       );
@@ -68,7 +71,7 @@ describe("Ribon", function () {
           it("transaction is reverted with error", async function () {
             await expect(
               ribon.connect(integrationCouncil).addNonProfitToWhitelist(nonProfit.address)
-            ).to.be.revertedWith("You are not non profit council.");
+            ).to.be.revertedWith("You are not the nonprofit council");
 
             expect(
               await ribon.isNonProfitOnWhitelist(nonProfit.address)
@@ -101,7 +104,7 @@ describe("Ribon", function () {
           it("transaction is reverted with error", async function () {
             await expect(
               ribon.connect(integrationCouncil).removeNonProfitFromWhitelist(nonProfit.address)
-            ).to.be.revertedWith("You are not non profit council.");
+            ).to.be.revertedWith("You are not the nonprofit council");
 
             expect(
               await ribon.isNonProfitOnWhitelist(nonProfit.address)
@@ -142,7 +145,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await expect(
               ribon.addDonationPoolBalance(0)
-            ).to.be.revertedWith("Amount must be greater than 0.");
+            ).to.be.revertedWith("Amount must be greater than 0");
           });
         });
 
@@ -201,7 +204,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () { 
             await expect(
               ribon.connect(nonProfitCouncil).addIntegrationBalance(integration.address, 10)
-            ).to.be.revertedWith("Not the integration council.");
+            ).to.be.revertedWith("You are not the integration council");
           });
         });
       });
@@ -251,7 +254,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await expect(
               ribon.connect(integration).removeIntegrationBalance(integration.address, 10)
-            ).to.be.revertedWith("Not the integration council.");
+            ).to.be.revertedWith("You are not the integration council");
           });
         });
       });
@@ -292,7 +295,7 @@ describe("Ribon", function () {
             it("reverts the transaction", async function () {
               await expect(
                 ribon.connect(integration).donateThroughIntegration(nonProfit.address, user, 100)
-              ).to.be.revertedWith("Balance must > amount");
+              ).to.be.revertedWith("Balance must greater than amount");
             });
           });
 
@@ -314,7 +317,75 @@ describe("Ribon", function () {
               user,
               10
             )
-          ).to.be.revertedWith("Is not on non profit whitelist");
+          ).to.be.revertedWith("Not a whitelisted nonprofit");
+        });
+      });
+    });
+
+    describe("Governance Council", () => {
+      describe("#transferDonationPoolBalance", () => {
+        describe("when you are the governance council", () => {
+          beforeEach(async () =>{
+            await donationToken.approve(ribon.address, 10);
+            await ribon.addDonationPoolBalance(10);
+            await ribon.connect(governanceCouncil).transferDonationPoolBalance();
+          });
+
+          it("should transfer donation tokens to governance wallet", async function () {
+            expect(await donationToken.balanceOf(governanceCouncil.address)).to.equal(10);
+          });
+
+          it("should set donation balance as 0", async function () {
+            expect(await ribon.getDonationPoolBalance()).to.equal(0);
+          });
+        });
+
+        describe("when you are not the governance council", () => {
+          it("reverts the transaction", async function () {
+            await expect(
+              ribon.connect(integration).transferDonationPoolBalance()
+            ).to.be.revertedWith("You are not the governance council");
+          });
+        });
+      });
+
+      describe("#setNonProfitCouncil", () => {
+        describe("when you are the governance council", () => {
+          beforeEach(async () =>{
+            await ribon.connect(governanceCouncil).setNonProfitCouncil(governanceCouncil.address);
+          });
+
+          it("should set the non profit council", async function () {
+            expect(await ribon.getNonProfitCouncil()).to.equal(governanceCouncil.address);
+          });
+        });
+
+        describe("when you are not the governance council", () => {
+          it("reverts the transaction", async function () {
+            await expect(
+              ribon.connect(nonProfitCouncil).setNonProfitCouncil(governanceCouncil.address)
+            ).to.be.revertedWith("You are not the governance council");
+          });
+        });
+      });
+
+      describe("#setIntegrationCouncil", () => {
+        describe("when you are the governance council", () => {
+          beforeEach(async () =>{
+            await ribon.connect(governanceCouncil).setIntegrationCouncil(governanceCouncil.address);
+          });
+
+          it("should set the integration council", async function () {
+            expect(await ribon.getIntegrationCouncil()).to.equal(governanceCouncil.address);
+          });
+        });
+
+        describe("when you are not the governance council", () => {
+          it("reverts the transaction", async function () {
+            await expect(
+              ribon.connect(integrationCouncil).setIntegrationCouncil(governanceCouncil.address)
+            ).to.be.revertedWith("You are not the governance council");
+          });
         });
       });
     });
