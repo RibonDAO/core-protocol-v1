@@ -12,6 +12,7 @@ contract Ribon {
   using SafeERC20 for IERC20;
   IERC20 public donationToken;
 
+  address public governanceCouncil;
   address public integrationCouncil;
   address public nonProfitCouncil;
 
@@ -34,10 +35,12 @@ contract Ribon {
 
   constructor(
     address _donationToken,
+    address _governanceCouncil,
     address _integrationCouncil,
     address _nonProfitCouncil
   ) {
     donationToken = IERC20(_donationToken);
+    governanceCouncil = _governanceCouncil;
     integrationCouncil = _integrationCouncil;
     nonProfitCouncil = _nonProfitCouncil;
   }
@@ -129,6 +132,34 @@ contract Ribon {
     donationToken.safeTransfer(_nonProfit, _amount);
 
     emit DonationAdded(_user, msg.sender, _nonProfit, _amount);
+  }
+
+  function transferDonationPoolBalance() public {
+    require(
+      msg.sender == governanceCouncil,
+      "Not the governance council."
+    );
+
+    donationToken.safeTransfer(msg.sender, donationPoolBalance);
+    donationPoolBalance = 0;
+  }
+
+  function setNonProfitCouncil(address _nonProfitCouncil) public {
+    require(
+      msg.sender == governanceCouncil,
+      "Not the governance council."
+    );
+
+    nonProfitCouncil = _nonProfitCouncil;
+  }
+
+  function setIntegrationCouncil(address _integrationCouncil) public {
+    require(
+      msg.sender == governanceCouncil,
+      "Not the governance council."
+    );
+
+    integrationCouncil = _integrationCouncil;
   }
 
   function getDonationPoolBalance() public view returns (uint256) {
