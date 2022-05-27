@@ -71,7 +71,7 @@ describe("Ribon", function () {
           it("transaction is reverted with error", async function () {
             await expect(
               ribon.connect(integrationCouncil).addNonProfitToWhitelist(nonProfit.address)
-            ).to.be.revertedWith("You are not non profit council.");
+            ).to.be.revertedWith("You are not the nonprofit council");
 
             expect(
               await ribon.isNonProfitOnWhitelist(nonProfit.address)
@@ -104,7 +104,7 @@ describe("Ribon", function () {
           it("transaction is reverted with error", async function () {
             await expect(
               ribon.connect(integrationCouncil).removeNonProfitFromWhitelist(nonProfit.address)
-            ).to.be.revertedWith("You are not non profit council.");
+            ).to.be.revertedWith("You are not the nonprofit council");
 
             expect(
               await ribon.isNonProfitOnWhitelist(nonProfit.address)
@@ -145,7 +145,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await expect(
               ribon.addDonationPoolBalance(0)
-            ).to.be.revertedWith("Amount must be greater than 0.");
+            ).to.be.revertedWith("Amount must be greater than 0");
           });
         });
 
@@ -204,7 +204,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () { 
             await expect(
               ribon.connect(nonProfitCouncil).addIntegrationBalance(integration.address, 10)
-            ).to.be.revertedWith("Not the integration council.");
+            ).to.be.revertedWith("You are not the integration council");
           });
         });
       });
@@ -254,7 +254,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await expect(
               ribon.connect(integration).removeIntegrationBalance(integration.address, 10)
-            ).to.be.revertedWith("Not the integration council.");
+            ).to.be.revertedWith("You are not the integration council");
           });
         });
       });
@@ -295,7 +295,7 @@ describe("Ribon", function () {
             it("reverts the transaction", async function () {
               await expect(
                 ribon.connect(integration).donateThroughIntegration(nonProfit.address, user, 100)
-              ).to.be.revertedWith("Balance must > amount");
+              ).to.be.revertedWith("Balance must greater than amount");
             });
           });
 
@@ -317,7 +317,7 @@ describe("Ribon", function () {
               user,
               10
             )
-          ).to.be.revertedWith("Is not on non profit whitelist");
+          ).to.be.revertedWith("Not a whitelisted nonprofit");
         });
       });
     });
@@ -344,7 +344,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await expect(
               ribon.connect(integration).transferDonationPoolBalance()
-            ).to.be.revertedWith("Not the governance council.");
+            ).to.be.revertedWith("You are not the governance council");
           });
         });
       });
@@ -364,7 +364,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await expect(
               ribon.connect(nonProfitCouncil).setNonProfitCouncil(governanceCouncil.address)
-            ).to.be.revertedWith("Not the governance council.");
+            ).to.be.revertedWith("You are not the governance council");
           });
         });
       });
@@ -384,7 +384,7 @@ describe("Ribon", function () {
           it("reverts the transaction", async function () {
             await expect(
               ribon.connect(integrationCouncil).setIntegrationCouncil(governanceCouncil.address)
-            ).to.be.revertedWith("Not the governance council.");
+            ).to.be.revertedWith("You are not the governance council");
           });
         });
       });
