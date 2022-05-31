@@ -23,7 +23,7 @@ contract Ribon {
 
   event NonProfitAdded(address nonProfit);
   event NonProfitRemoved(address nonProfit);
-  event PoolBalanceIncreased(address promoter, uint256 amount);
+  event PoolBalanceIncreased(address promoter, bytes32 user, uint256 amount);
   event IntegrationBalanceAdded(address integration, uint256 amount);
   event IntegrationBalanceRemoved(address integration, uint256 amount);
   event DonationAdded(
@@ -61,13 +61,13 @@ contract Ribon {
     emit NonProfitRemoved(_nonProfit);
   }
 
-  function addDonationPoolBalance(uint256 _amount) public {
+  function addDonationPoolBalance(uint256 _amount, bytes32 _user) public {
     require(_amount > 0, "Amount must be greater than 0");
 
     donationToken.safeTransferFrom(msg.sender, address(this), _amount);
     donationPoolBalance += _amount;
 
-    emit PoolBalanceIncreased(msg.sender, _amount);
+    emit PoolBalanceIncreased(msg.sender, _user, _amount);
   }
 
   function addIntegrationBalance(address _integration, uint256 _amount)

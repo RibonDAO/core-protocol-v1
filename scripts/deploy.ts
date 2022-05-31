@@ -15,6 +15,7 @@ async function main() {
   const ribon = await RibonContract.deploy(
     donationToken.address,
     owner.address,
+    owner.address,
     owner.address
   );
   await ribon.deployed();
