@@ -161,24 +161,4 @@ contract Ribon {
 
     integrationCouncil = _integrationCouncil;
   }
-
-  function getDonationPoolBalance() public view returns (uint256) {
-    return donationPoolBalance;
-  }
-  
-  function getIntegrationCouncil() public view returns (address) {
-    return integrationCouncil;
-  }
-
-  function getNonProfitCouncil() public view returns (address) {
-    return nonProfitCouncil;
-  }
-
-  function isNonProfitOnWhitelist(address _nonProfit) public view returns (bool) {
-    return nonProfits[_nonProfit];
-  }
-
-  function getIntegrationBalance(address _integration) public view returns (uint256) {
-    return integrations[_integration];
-  }
 }
