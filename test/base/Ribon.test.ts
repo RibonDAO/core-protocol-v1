@@ -129,6 +129,7 @@ describe("Ribon", function () {
         beforeEach(async () =>{
           const value = 123
           const { v, r, s } = await getPermitSignature(promoter, donationToken, ribon.address, value)
+          console.log(v, r, s);
           await ribon.selfPermit(donationToken.address, value, constants.MaxUint256, v, r, s)
           await ribon.addDonationPoolBalance(10, crypto_user);
         });
