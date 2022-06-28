@@ -25,11 +25,15 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 const config: HardhatUserConfig = {
   solidity: "0.8.14",
   networks: {
-    mumbai: {
-      url: process.env.TESTNET_ALCHEMY_KEY || "",
+    testnet: {
+      url: process.env.TESTNET_RPC_KEY || "",
       accounts:
         process.env.TESTNET_PRIVATE_KEY !== undefined ? [process.env.TESTNET_PRIVATE_KEY] : [],
     },
+    localhost: {
+      url: "http://127.0.0.1:8545/",
+      accounts: process.env.LOCALHOST_PRIVATE_KEY !== undefined ? [process.env.LOCALHOST_PRIVATE_KEY] : [],
+    }
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

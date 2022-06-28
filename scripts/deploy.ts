@@ -4,7 +4,7 @@ async function main() {
   const DonationTokenContract = await ethers.getContractFactory(
     "TestERC20"
   );
-  const donationToken = await DonationTokenContract.deploy(1000000000000000000000000);
+  const donationToken = await DonationTokenContract.deploy("1000000000000000000000000");
   await donationToken.deployed();
 
   console.log("Donation Token deployed to:", donationToken.address);
