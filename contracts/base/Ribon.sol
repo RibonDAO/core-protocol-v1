@@ -49,7 +49,7 @@ contract Ribon {
     nonProfitCouncil = _nonProfitCouncil;
   }
 
-  function addNonProfitToWhitelist(address _nonProfit) public {
+  function addNonProfitToWhitelist(address _nonProfit) external {
     require(msg.sender == nonProfitCouncil, "You are not the nonprofit council");
 
     nonProfits[_nonProfit] = true;
@@ -57,7 +57,7 @@ contract Ribon {
     emit NonProfitAdded(_nonProfit);
   }
 
-  function removeNonProfitFromWhitelist(address _nonProfit) public {
+  function removeNonProfitFromWhitelist(address _nonProfit) external {
     require(msg.sender == nonProfitCouncil, "You are not the nonprofit council");
 
     nonProfits[_nonProfit] = false;
@@ -65,7 +65,7 @@ contract Ribon {
     emit NonProfitRemoved(_nonProfit);
   }
 
-  function addDonationPoolBalance(uint256 _amount) public {
+  function addDonationPoolBalance(uint256 _amount) external {
     require(_amount > 0, "Amount must be greater than 0");
 
     donationToken.safeTransferFrom(msg.sender, address(this), _amount);
@@ -75,7 +75,7 @@ contract Ribon {
   }
 
   function addIntegrationBalance(address _integration, uint256 _amount)
-    public
+    external
   {
     require(
       msg.sender == integrationCouncil,
@@ -94,7 +94,7 @@ contract Ribon {
   }
 
   function removeIntegrationBalance(address _integration, uint256 _amount)
-    public
+    external
   {
     require(
       msg.sender == integrationCouncil,
@@ -116,7 +116,7 @@ contract Ribon {
     address _nonProfit,
     bytes32 _user,
     uint256 _amount
-  ) public {
+  ) external {
     require(
       nonProfits[_nonProfit],
       "Not a whitelisted nonprofit"
@@ -134,7 +134,7 @@ contract Ribon {
     emit DonationAdded(_user, msg.sender, _nonProfit, _amount);
   }
 
-  function transferDonationPoolBalance() public {
+  function transferDonationPoolBalance() external {
     require(
       msg.sender == governanceCouncil,
       "You are not the governance council"
@@ -146,7 +146,7 @@ contract Ribon {
     emit DonationPoolBalanceTransfered(amount);
   }
 
-  function setNonProfitCouncil(address _nonProfitCouncil) public {
+  function setNonProfitCouncil(address _nonProfitCouncil) external {
     require(
       msg.sender == governanceCouncil,
       "You are not the governance council"
@@ -157,7 +157,7 @@ contract Ribon {
     emit NonProfitCouncilChanged(nonProfitCouncil);
   }
 
-  function setIntegrationCouncil(address _integrationCouncil) public {
+  function setIntegrationCouncil(address _integrationCouncil) external {
     require(
       msg.sender == governanceCouncil,
       "You are not the governance council"
