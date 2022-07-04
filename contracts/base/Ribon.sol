@@ -77,16 +77,14 @@ contract Ribon {
       msg.sender == integrationCouncil,
       "You are not the integration council"
     );
-    unchecked{
-      require(
-        donationPoolBalance >= _amount,
-        "Balance must be greater than amount"
-      );
-      require(_amount > 0, "Amount must be greater than 0");
+    require(
+      donationPoolBalance >= _amount,
+      "Balance must be greater than amount"
+    );
+    require(_amount > 0, "Amount must be greater than 0");
 
-      donationPoolBalance -= _amount;
-      integrations[_integration] += _amount;
-    }
+    donationPoolBalance -= _amount;
+    integrations[_integration] += _amount;
 
     emit IntegrationBalanceAdded(_integration, _amount);
   }
@@ -98,16 +96,14 @@ contract Ribon {
       msg.sender == integrationCouncil,
       "You are not the integration council"
     );
-    unchecked{
-      require(
-        integrations[_integration] >= _amount,
-        "Balance must be greater than amount"
-      );
-      require(_amount > 0, "Amount must be greater than 0");
+    require(
+      integrations[_integration] >= _amount,
+      "Balance must be greater than amount"
+    );
+    require(_amount > 0, "Amount must be greater than 0");
 
-      donationPoolBalance += _amount;
-      integrations[_integration] -= _amount;
-    }
+    donationPoolBalance += _amount;
+    integrations[_integration] -= _amount;
 
     emit IntegrationBalanceRemoved(_integration, _amount);
   }
