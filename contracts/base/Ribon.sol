@@ -118,7 +118,7 @@ contract Ribon {
     uint256 _amount
   ) public {
     require(
-      nonProfits[_nonProfit] == true,
+      nonProfits[_nonProfit],
       "Not a whitelisted nonprofit"
     );
     require(
