@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Ribon {
   using SafeERC20 for IERC20;
-  IERC20 public donationToken;
+  IERC20 immutable public donationToken;
 
   address public governanceCouncil;
   address public integrationCouncil;
