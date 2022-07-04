@@ -352,6 +352,16 @@ describe("Ribon", function () {
         it("should set donation balance as 0", async function () {
           expect(await ribon.donationPoolBalance()).to.equal(0);
         });
+
+        it("emits DonationPoolBalanceTransfered event", async function () {
+          await donationToken.approve(ribon.address, 10);
+          await ribon.addDonationPoolBalance(10);
+          await expect(
+            ribon.connect(governanceCouncil).transferDonationPoolBalance()
+          )
+            .to.emit(ribon, "DonationPoolBalanceTransfered")
+            .withArgs(10);
+        });
       });
 
       describe("when you are not the governance council", () => {
@@ -372,6 +382,14 @@ describe("Ribon", function () {
         it("should set the non profit council", async function () {
           expect(await ribon.nonProfitCouncil()).to.equal(governanceCouncil.address);
         });
+
+        it("emits NonProfitCouncilChanged event", async function () {
+          await expect(
+            ribon.connect(governanceCouncil).setNonProfitCouncil(governanceCouncil.address)
+          )
+            .to.emit(ribon, "NonProfitCouncilChanged")
+            .withArgs(governanceCouncil.address);
+        });
       });
 
       describe("when you are not the governance council", () => {
@@ -391,6 +409,14 @@ describe("Ribon", function () {
 
         it("should set the integration council", async function () {
           expect(await ribon.integrationCouncil()).to.equal(governanceCouncil.address);
+        });
+
+        it("emits IntegrationCouncilChanged event", async function () {
+          await expect(
+            ribon.connect(governanceCouncil).setIntegrationCouncil(governanceCouncil.address)
+          )
+            .to.emit(ribon, "IntegrationCouncilChanged")
+            .withArgs(governanceCouncil.address);
         });
       });
 

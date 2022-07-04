@@ -33,6 +33,10 @@ contract Ribon {
     uint256 amount
   );
 
+  event NonProfitCouncilChanged(address nonProfitCouncil);
+  event IntegrationCouncilChanged(address integrationCouncil);
+  event DonationPoolBalanceTransfered(uint256 amount);
+
   constructor(
     address _donationToken,
     address _governanceCouncil,
@@ -135,9 +139,11 @@ contract Ribon {
       msg.sender == governanceCouncil,
       "You are not the governance council"
     );
-
-    donationToken.safeTransfer(msg.sender, donationPoolBalance);
+    uint amount = donationPoolBalance;
     donationPoolBalance = 0;
+    donationToken.safeTransfer(msg.sender, amount);
+    
+    emit DonationPoolBalanceTransfered(amount);
   }
 
   function setNonProfitCouncil(address _nonProfitCouncil) public {
@@ -147,6 +153,8 @@ contract Ribon {
     );
 
     nonProfitCouncil = _nonProfitCouncil;
+
+    emit NonProfitCouncilChanged(nonProfitCouncil);
   }
 
   function setIntegrationCouncil(address _integrationCouncil) public {
@@ -156,5 +164,7 @@ contract Ribon {
     );
 
     integrationCouncil = _integrationCouncil;
+
+    emit IntegrationCouncilChanged(integrationCouncil);
   }
 }
