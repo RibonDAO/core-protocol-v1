@@ -2,9 +2,9 @@ import { ethers } from "hardhat";
 
 async function main() {
   const DonationTokenContract = await ethers.getContractFactory(
-    "DonationToken"
+    "TestERC20"
   );
-  const donationToken = await DonationTokenContract.deploy();
+  const donationToken = await DonationTokenContract.deploy("1000000000000000000000000");
   await donationToken.deployed();
 
   console.log("Donation Token deployed to:", donationToken.address);
