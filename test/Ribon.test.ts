@@ -6,7 +6,6 @@ import { Fixture } from 'ethereum-waffle'
 
 describe("Ribon", function () {
   const user = "0xd229e8696a794bb2669821b444690c05f1faa8337ffba5053914b66c99dd39e0";
-  const crypto_user = "0x0000000000000000000000000000000000000000000000000000000000000000";
   let governanceCouncil: Wallet;
   let nonProfitCouncil: Wallet;
   let integrationCouncil: Wallet;
@@ -126,7 +125,7 @@ describe("Ribon", function () {
         beforeEach(async () =>{
           const value = 123
           await donationToken.approve(ribon.address, 10);
-          await ribon.addDonationPoolBalance(10, crypto_user);
+          await ribon.addDonationPoolBalance(10);
         });
 
         it("should increase contract donation token's balance", async function () {
@@ -142,26 +141,16 @@ describe("Ribon", function () {
         it("emits PoolBalanceIncreased event", async function () {
           await donationToken.approve(ribon.address, 10);
   
-          await expect(ribon.connect(promoter).addDonationPoolBalance(10, crypto_user))
+          await expect(ribon.connect(promoter).addDonationPoolBalance(10))
             .to.emit(ribon, "PoolBalanceIncreased")
-            .withArgs(promoter.address, crypto_user, 10);
-        });
-      });
-
-      describe("when is a normal user", () => {
-        it("emits PoolBalanceIncreased event", async function () {
-          await donationToken.approve(ribon.address, 10);
-  
-          await expect(ribon.connect(promoter).addDonationPoolBalance(10, user))
-            .to.emit(ribon, "PoolBalanceIncreased")
-            .withArgs(promoter.address, user, 10);
+            .withArgs(promoter.address, 10);
         });
       });
       
       describe("when amount is 0", () => {
         it("reverts the transaction", async function () {
           await expect(
-            ribon.addDonationPoolBalance(0, crypto_user)
+            ribon.addDonationPoolBalance(0)
           ).to.be.revertedWith("Amount must be greater than 0");
         });
       });
@@ -169,7 +158,7 @@ describe("Ribon", function () {
       describe("when have insuficient allowance", () => {
         it("reverts the transaction", async function () {
           await expect(
-            ribon.connect(promoter).addDonationPoolBalance(10, crypto_user)
+            ribon.connect(promoter).addDonationPoolBalance(10)
           ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
         });
       });
@@ -178,7 +167,7 @@ describe("Ribon", function () {
         it("reverts the transaction", async function () {
           await donationToken.connect(nonProfitCouncil).approve(ribon.address, 20);
           await expect(
-            ribon.connect(nonProfitCouncil).addDonationPoolBalance(10, crypto_user)
+            ribon.connect(nonProfitCouncil).addDonationPoolBalance(10)
           ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
         });
       });
@@ -191,7 +180,7 @@ describe("Ribon", function () {
         describe("when you have enough balance", () => {
           beforeEach(async () =>{
             await donationToken.approve(ribon.address, 10);
-            await ribon.addDonationPoolBalance(10, crypto_user);
+            await ribon.addDonationPoolBalance(10);
           });
 
           it("increasses the integration balance", async function () {
@@ -238,7 +227,7 @@ describe("Ribon", function () {
       describe("when you are the integration council", () => {
         beforeEach(async () =>{
           await donationToken.approve(ribon.address, 10);
-          await ribon.connect(promoter).addDonationPoolBalance(10, crypto_user);
+          await ribon.connect(promoter).addDonationPoolBalance(10);
           await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
         });
         
@@ -289,7 +278,7 @@ describe("Ribon", function () {
     describe("#donateThroughIntegration", () => {
       beforeEach(async () =>{
         await donationToken.approve(ribon.address, 10);
-        await ribon.addDonationPoolBalance(10, crypto_user);
+        await ribon.addDonationPoolBalance(10);
         await ribon.connect(nonProfitCouncil).addNonProfitToWhitelist(nonProfit.address);
         await ribon.connect(integrationCouncil).addIntegrationBalance(integration.address, 10);
       });
@@ -352,7 +341,7 @@ describe("Ribon", function () {
       describe("when you are the governance council", () => {
         beforeEach(async () =>{
           await donationToken.approve(ribon.address, 10);
-          await ribon.addDonationPoolBalance(10, crypto_user);
+          await ribon.addDonationPoolBalance(10);
           await ribon.connect(governanceCouncil).transferDonationPoolBalance();
         });
 
@@ -362,6 +351,16 @@ describe("Ribon", function () {
 
         it("should set donation balance as 0", async function () {
           expect(await ribon.donationPoolBalance()).to.equal(0);
+        });
+
+        it("emits DonationPoolBalanceTransfered event", async function () {
+          await donationToken.approve(ribon.address, 10);
+          await ribon.addDonationPoolBalance(10);
+          await expect(
+            ribon.connect(governanceCouncil).transferDonationPoolBalance()
+          )
+            .to.emit(ribon, "DonationPoolBalanceTransfered")
+            .withArgs(10);
         });
       });
 
@@ -383,6 +382,14 @@ describe("Ribon", function () {
         it("should set the non profit council", async function () {
           expect(await ribon.nonProfitCouncil()).to.equal(governanceCouncil.address);
         });
+
+        it("emits NonProfitCouncilChanged event", async function () {
+          await expect(
+            ribon.connect(governanceCouncil).setNonProfitCouncil(governanceCouncil.address)
+          )
+            .to.emit(ribon, "NonProfitCouncilChanged")
+            .withArgs(governanceCouncil.address);
+        });
       });
 
       describe("when you are not the governance council", () => {
@@ -402,6 +409,14 @@ describe("Ribon", function () {
 
         it("should set the integration council", async function () {
           expect(await ribon.integrationCouncil()).to.equal(governanceCouncil.address);
+        });
+
+        it("emits IntegrationCouncilChanged event", async function () {
+          await expect(
+            ribon.connect(governanceCouncil).setIntegrationCouncil(governanceCouncil.address)
+          )
+            .to.emit(ribon, "IntegrationCouncilChanged")
+            .withArgs(governanceCouncil.address);
         });
       });
 

@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Ribon {
   using SafeERC20 for IERC20;
-  IERC20 public donationToken;
+  IERC20 immutable public donationToken;
 
   address public governanceCouncil;
   address public integrationCouncil;
@@ -23,7 +23,7 @@ contract Ribon {
 
   event NonProfitAdded(address nonProfit);
   event NonProfitRemoved(address nonProfit);
-  event PoolBalanceIncreased(address promoter, bytes32 user, uint256 amount);
+  event PoolBalanceIncreased(address promoter, uint256 amount);
   event IntegrationBalanceAdded(address integration, uint256 amount);
   event IntegrationBalanceRemoved(address integration, uint256 amount);
   event DonationAdded(
@@ -32,6 +32,10 @@ contract Ribon {
     address nonProfit,
     uint256 amount
   );
+
+  event NonProfitCouncilChanged(address nonProfitCouncil);
+  event IntegrationCouncilChanged(address integrationCouncil);
+  event DonationPoolBalanceTransfered(uint256 amount);
 
   constructor(
     address _donationToken,
@@ -45,7 +49,7 @@ contract Ribon {
     nonProfitCouncil = _nonProfitCouncil;
   }
 
-  function addNonProfitToWhitelist(address _nonProfit) public {
+  function addNonProfitToWhitelist(address _nonProfit) external {
     require(msg.sender == nonProfitCouncil, "You are not the nonprofit council");
 
     nonProfits[_nonProfit] = true;
@@ -53,7 +57,7 @@ contract Ribon {
     emit NonProfitAdded(_nonProfit);
   }
 
-  function removeNonProfitFromWhitelist(address _nonProfit) public {
+  function removeNonProfitFromWhitelist(address _nonProfit) external {
     require(msg.sender == nonProfitCouncil, "You are not the nonprofit council");
 
     nonProfits[_nonProfit] = false;
@@ -61,53 +65,49 @@ contract Ribon {
     emit NonProfitRemoved(_nonProfit);
   }
 
-  function addDonationPoolBalance(uint256 _amount, bytes32 _user) public {
+  function addDonationPoolBalance(uint256 _amount) external {
     require(_amount > 0, "Amount must be greater than 0");
 
     donationToken.safeTransferFrom(msg.sender, address(this), _amount);
     donationPoolBalance += _amount;
 
-    emit PoolBalanceIncreased(msg.sender, _user, _amount);
+    emit PoolBalanceIncreased(msg.sender, _amount);
   }
 
   function addIntegrationBalance(address _integration, uint256 _amount)
-    public
+    external
   {
     require(
       msg.sender == integrationCouncil,
       "You are not the integration council"
     );
-    unchecked{
-      require(
-        donationPoolBalance >= _amount,
-        "Balance must be greater than amount"
-      );
-      require(_amount > 0, "Amount must be greater than 0");
+    require(
+      donationPoolBalance >= _amount,
+      "Balance must be greater than amount"
+    );
+    require(_amount > 0, "Amount must be greater than 0");
 
-      donationPoolBalance -= _amount;
-      integrations[_integration] += _amount;
-    }
+    donationPoolBalance -= _amount;
+    integrations[_integration] += _amount;
 
     emit IntegrationBalanceAdded(_integration, _amount);
   }
 
   function removeIntegrationBalance(address _integration, uint256 _amount)
-    public
+    external
   {
     require(
       msg.sender == integrationCouncil,
       "You are not the integration council"
     );
-    unchecked{
-      require(
-        integrations[_integration] >= _amount,
-        "Balance must be greater than amount"
-      );
-      require(_amount > 0, "Amount must be greater than 0");
+    require(
+      integrations[_integration] >= _amount,
+      "Balance must be greater than amount"
+    );
+    require(_amount > 0, "Amount must be greater than 0");
 
-      donationPoolBalance += _amount;
-      integrations[_integration] -= _amount;
-    }
+    donationPoolBalance += _amount;
+    integrations[_integration] -= _amount;
 
     emit IntegrationBalanceRemoved(_integration, _amount);
   }
@@ -116,9 +116,9 @@ contract Ribon {
     address _nonProfit,
     bytes32 _user,
     uint256 _amount
-  ) public {
+  ) external {
     require(
-      nonProfits[_nonProfit] == true,
+      nonProfits[_nonProfit],
       "Not a whitelisted nonprofit"
     );
     require(
@@ -134,31 +134,37 @@ contract Ribon {
     emit DonationAdded(_user, msg.sender, _nonProfit, _amount);
   }
 
-  function transferDonationPoolBalance() public {
+  function transferDonationPoolBalance() external {
     require(
       msg.sender == governanceCouncil,
       "You are not the governance council"
     );
-
-    donationToken.safeTransfer(msg.sender, donationPoolBalance);
+    uint amount = donationPoolBalance;
     donationPoolBalance = 0;
+    donationToken.safeTransfer(msg.sender, amount);
+    
+    emit DonationPoolBalanceTransfered(amount);
   }
 
-  function setNonProfitCouncil(address _nonProfitCouncil) public {
+  function setNonProfitCouncil(address _nonProfitCouncil) external {
     require(
       msg.sender == governanceCouncil,
       "You are not the governance council"
     );
 
     nonProfitCouncil = _nonProfitCouncil;
+
+    emit NonProfitCouncilChanged(nonProfitCouncil);
   }
 
-  function setIntegrationCouncil(address _integrationCouncil) public {
+  function setIntegrationCouncil(address _integrationCouncil) external {
     require(
       msg.sender == governanceCouncil,
       "You are not the governance council"
     );
 
     integrationCouncil = _integrationCouncil;
+
+    emit IntegrationCouncilChanged(integrationCouncil);
   }
 }
