@@ -13,4 +13,5 @@ jobs:
           yarn install
       - name: Run tests
         run: |
+          npx hardhat compile
           npx hardhat test
