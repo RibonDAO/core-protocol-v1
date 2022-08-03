@@ -13,7 +13,7 @@ async function main() {
 
   const RibonContract = await ethers.getContractFactory("Ribon");
   const ribon = await RibonContract.deploy(
-    donationToken.address,
+    "0x21A72dc641c8e5f13717a7e087d6D63B4f9A3574",
     owner.address,
     owner.address,
     owner.address
