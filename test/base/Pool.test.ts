@@ -42,6 +42,48 @@ describe("Pool", function () {
     ;({ token, pool } = await loadFixture(fixture))
   })
 
+  describe("#addNonProfitToWhitelist", () => {
+    describe("when you are the pool manager", () => {
+      it("adds the non profit to the whitelist", async function () {
+        await pool.addNonProfitToWhitelist(nonProfit.address);
+        expect(await pool.nonProfits(nonProfit.address)).to.equal(true);
+      });
+
+      it("emits NonProfitAdded event", async function () {
+        await expect(pool.addNonProfitToWhitelist(nonProfit.address))
+          .to.emit(pool, "NonProfitAdded")
+          .withArgs(nonProfit.address);
+      });
+    });
+
+    describe("when you are not the pool manager", () => {
+      it("reverts the transaction", async function () {
+        await expect(pool.connect(nonProfit).addNonProfitToWhitelist(nonProfit.address))
+          .to.be.revertedWith("You are not the manager");
+      });
+    });
+  });
+
+  describe("#removeNonProfitFromWhitelist", () => {
+    beforeEach(async () =>{
+      await pool.addNonProfitToWhitelist(nonProfit.address);
+    });
+
+    describe("when you are the pool manager", () => {
+      it("removes the non profit from the whitelist", async function () {
+        await pool.removeNonProfitFromWhitelist(nonProfit.address);
+        expect(await pool.nonProfits(nonProfit.address)).to.equal(false);
+      });
+    });
+
+    describe("when you are not the pool manager", () => {
+      it("reverts the transaction", async function () {
+        await expect(pool.connect(nonProfit).removeNonProfitFromWhitelist(nonProfit.address))
+          .to.be.revertedWith("You are not the manager");
+      });
+    });
+  });
+
   describe("#addBalance", () => {
     describe("when you have suficient balance", () => {
       beforeEach(async () =>{
@@ -141,18 +183,34 @@ describe("Pool", function () {
         });
       });
     });
-  });
-  
-  describe("when non profit is not on whitelist", () => {
-    it("reverts the transaction", async function () { 
-      await expect(
-        pool.connect(manager).donateThroughIntegration(
-          nonProfitCouncil.address,
-          integration.address,
-          user,
-          10
-        )
-      ).to.be.revertedWith("Not a whitelisted nonprofit");
+
+    describe("when non profit is not on whitelist", () => {
+      it("reverts the transaction", async function () { 
+        await expect(
+          pool.connect(manager).donateThroughIntegration(
+            nonProfitCouncil.address,
+            integration.address,
+            user,
+            10
+          )
+        ).to.be.revertedWith("Not a whitelisted nonprofit");
+      });
+    });
+
+    describe("when you are not the manager", () => {
+      it("reverts the transaction", async function () {
+        await expect(
+          pool.connect(nonProfit).donateThroughIntegration(nonProfit.address, integration.address, user, 10)
+        ).to.be.revertedWith("You are not the manager");
+      });
+    });
+
+    describe("when the amount is 0", () => {
+      it("reverts the transaction", async function () {
+        await expect(
+          pool.connect(manager).donateThroughIntegration(nonProfit.address, integration.address, user, 0)
+        ).to.be.revertedWith("Amount must be greater than 0");
+      });
     });
   });
 });
