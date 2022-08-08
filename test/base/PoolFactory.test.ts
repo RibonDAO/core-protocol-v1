@@ -40,7 +40,7 @@ describe("PoolFactory", function () {
   })
 
   describe("#createPool", () => {
-    describe("when you create pool sucessfully", () => {
+    describe("when you are the manager", () => {
       beforeEach(async () =>{
         await poolFactory.createPool(token.address);
       });
@@ -54,9 +54,12 @@ describe("PoolFactory", function () {
         await expect(poolFactory.createPool(token.address))
           .to.emit(poolFactory, "PoolCreated");
       });
+    });
 
-      it("Create Pool add Add balance", async function () {
-        
+    describe("when you are not the manager", () => {
+      it("reverts the transaction", async function () {
+        await expect(poolFactory.connect(nonProfit).createPool(token.address))
+          .to.be.revertedWith("You are not the manager");
       });
     });
   });
