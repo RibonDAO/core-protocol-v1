@@ -6,7 +6,7 @@ import { Fixture } from 'ethereum-waffle'
 
 describe("PoolFactory", function () {
   let nonProfit: Wallet;
-  let owner: Wallet;
+  let manager: Wallet;
 
   const fixture: Fixture<{
     token: TestERC20
@@ -16,7 +16,7 @@ describe("PoolFactory", function () {
     const token = (await tokenFactory.deploy(100000)) as TestERC20
 
     const poolFactoryFactory = await ethers.getContractFactory('PoolFactory')
-    const poolFactory= (await poolFactoryFactory.deploy()) as PoolFactory
+    const poolFactory= (await poolFactoryFactory.deploy(wallets[0].address)) as PoolFactory
 
     return {
       token,
@@ -31,7 +31,7 @@ describe("PoolFactory", function () {
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners()
-    ;[owner, nonProfit] = wallets
+    ;[manager, nonProfit] = wallets
     loadFixture = waffle.createFixtureLoader(wallets)
   })
 
@@ -42,7 +42,7 @@ describe("PoolFactory", function () {
   describe("#createPool", () => {
     describe("when you create pool sucessfully", () => {
       beforeEach(async () =>{
-        await poolFactory.createPool(token.address, owner.address, nonProfit.address);
+        await poolFactory.createPool(token.address);
       });
 
       it("should increase pools length by 1", async function () {
@@ -51,7 +51,7 @@ describe("PoolFactory", function () {
       });
 
       it("emits PoolCreated event", async function () {
-        await expect(poolFactory.createPool(token.address, owner.address, nonProfit.address))
+        await expect(poolFactory.createPool(token.address))
           .to.emit(poolFactory, "PoolCreated");
       });
 
@@ -64,7 +64,7 @@ describe("PoolFactory", function () {
   describe("#createPool then #addBalance", () => {
     describe("when you create pool sucessfully", () => {
       beforeEach(async () =>{
-        await poolFactory.createPool(token.address, owner.address, nonProfit.address);
+        await poolFactory.createPool(token.address);
       });
 
       it("should increase pools length by 1", async function () {
@@ -72,7 +72,7 @@ describe("PoolFactory", function () {
         const poolContract = await ethers.getContractFactory('Pool')
         const pool = await new ethers.Contract(pools[0], poolContract.interface)
         await token.approve(pool.address, 10);
-        await pool.connect(owner).addBalance(10);
+        await pool.connect(manager).addBalance(10);
         const balance = await token.balanceOf(pool.address);
         expect(balance).to.equal(10);
       })

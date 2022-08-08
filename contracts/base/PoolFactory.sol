@@ -7,20 +7,26 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "./Pool.sol";
+import "../interfaces/IPoolFactory.sol";
 
-contract PoolFactory {
-    address [] public pools;
+contract PoolFactory is IPoolFactory {
+    address public manager;
+    address[] public pools;
 
-     event PoolCreated(
+    event PoolCreated(
         address pool,
         address token
     );
+    
+    constructor(address _manager) {
+        manager = _manager;    
+    }
 
-    function createPool(address token, address owner, address nonProfit) external returns(address pool) {
-        pool = address(new Pool(token, owner, nonProfit));
+    function createPool(address _token) external returns(address pool) {
+        require(msg.sender == manager, "You are not the manager");
+        pool = address(new Pool(_token, manager));
         pools.push(pool);
-        emit PoolCreated(pool, token);
-        return pool;
+        emit PoolCreated(pool, _token);
     }
 
     function getPools() public view returns(address [] memory) {

@@ -9,7 +9,7 @@ describe("Pool", function () {
   let nonProfitCouncil: Wallet;
   let nonProfit: Wallet;
   let integration: Wallet;
-  let owner: Wallet;
+  let manager: Wallet;
 
   const fixture: Fixture<{
     token: TestERC20
@@ -19,7 +19,7 @@ describe("Pool", function () {
     const token = (await tokenFactory.deploy(100000)) as TestERC20
 
     const poolFactory = await ethers.getContractFactory('Pool')
-    const pool = (await poolFactory.deploy(token.address, wallets[0].address, wallets[1].address)) as Pool
+    const pool = (await poolFactory.deploy(token.address, wallets[0].address)) as Pool
 
     return {
       token,
@@ -34,7 +34,7 @@ describe("Pool", function () {
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners()
-    ;[owner, nonProfit, nonProfitCouncil, integration] = wallets
+    ;[manager, nonProfit, nonProfitCouncil, integration] = wallets
     loadFixture = waffle.createFixtureLoader(wallets)
   })
 
@@ -42,121 +42,117 @@ describe("Pool", function () {
     ;({ token, pool } = await loadFixture(fixture))
   })
 
-  describe("Promoter", () => {
-    describe("#addDonationPoolBalance", () => {
-      describe("when you have suficient balance", () => {
-        beforeEach(async () =>{
-          const value = 123
-          await token.approve(pool.address, 10);
-          await pool.addBalance(10);
-        });
-
-        it("should increase contract donation token's balance", async function () {
-          const balance = await token.balanceOf(pool.address);
-          expect(balance).to.equal(10);
-        });
-
-        it("should increase donation pool balance", async function () {
-          const balance = await token.balanceOf(pool.address);
-          expect(balance).to.equal(10);
-        });
-  
-        it("emits PoolBalanceIncreased event", async function () {
-          await token.approve(pool.address, 10);
-  
-          await expect(pool.connect(owner).addBalance(10))
-            .to.emit(pool, "BalanceIncreased")
-            .withArgs(owner.address, 10);
-        });
-      });
-      
-      describe("when amount is 0", () => {
-        it("reverts the transaction", async function () {
-          await expect(
-            pool.addBalance(0)
-          ).to.be.revertedWith("Amount must be greater than 0");
-        });
-      });
-
-      describe("when have insuficient allowance", () => {
-        it("reverts the transaction", async function () {
-          await expect(
-            pool.connect(owner).addBalance(10)
-          ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
-        });
-      });
-
-      describe("when have insuficient funds", () => {
-        it("reverts the transaction", async function () {
-          await token.connect(nonProfitCouncil).approve(pool.address, 20);
-          await expect(
-            pool.connect(nonProfitCouncil).addBalance(10)
-          ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-        });
-      });
-    });
-  });
-
-  describe("Integration", () => {
-    describe("#donateThroughIntegration", () => {
+  describe("#addBalance", () => {
+    describe("when you have suficient balance", () => {
       beforeEach(async () =>{
         await token.approve(pool.address, 10);
         await pool.addBalance(10);
       });
 
-      describe("when the non profit is on whitelist", () => {
-        describe("when the pool have enough balance", () => {
-          it("decreases the pool balance", async function () {
-            expect(await token.balanceOf(pool.address)).to.equal(10);
-            await pool.connect(owner).donateThroughIntegration(
-              nonProfit.address,
-              integration.address,
-              user,
-              10
-            );
+      it("should increase contract donation token's balance", async function () {
+        const balance = await token.balanceOf(pool.address);
+        expect(balance).to.equal(10);
+      });
 
-            expect(await token.balanceOf(pool.address)).to.equal(0);
-          });
+      it("should increase donation pool balance", async function () {
+        const balance = await token.balanceOf(pool.address);
+        expect(balance).to.equal(10);
+      });
 
-          it("emits DonationAdded event", async function () {
+      it("emits PoolBalanceIncreased event", async function () {
+        await token.approve(pool.address, 10);
 
-            await expect(
-              pool.connect(owner).donateThroughIntegration(nonProfit.address, integration.address, user, 10)
-            )
-              .to.emit(pool, "DonationAdded")
-              .withArgs(user, integration.address, nonProfit.address, 10);
-          });
-        });
-
-        describe("when the pool don't have enough balance", () => {
-          it("reverts the transaction", async function () {
-            await expect(
-              pool.connect(owner).donateThroughIntegration(nonProfit.address,integration.address, user, 100)
-            ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-          });
-        });
-
-        describe("when the amount is 0", () => {
-          it("reverts the transaction", async function () {
-            await expect(
-              pool.connect(owner).donateThroughIntegration(nonProfit.address,integration.address, user, 0)
-            ).to.be.revertedWith("Amount must be greater than 0");
-          });
-        });
+        await expect(pool.connect(manager).addBalance(10))
+          .to.emit(pool, "BalanceIncreased")
+          .withArgs(manager.address, 10);
       });
     });
     
-    describe("when non profit is not on whitelist", () => {
-      it("reverts the transaction", async function () { 
+    describe("when amount is 0", () => {
+      it("reverts the transaction", async function () {
         await expect(
-          pool.connect(owner).donateThroughIntegration(
-            nonProfitCouncil.address,
+          pool.addBalance(0)
+        ).to.be.revertedWith("Amount must be greater than 0");
+      });
+    });
+
+    describe("when have insuficient allowance", () => {
+      it("reverts the transaction", async function () {
+        await expect(
+          pool.connect(manager).addBalance(10)
+        ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+      });
+    });
+
+    describe("when have insuficient funds", () => {
+      it("reverts the transaction", async function () {
+        await token.connect(nonProfitCouncil).approve(pool.address, 20);
+        await expect(
+          pool.connect(nonProfitCouncil).addBalance(10)
+        ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+      });
+    });
+  });
+
+  describe("#donateThroughIntegration", () => {
+    beforeEach(async () =>{
+      await pool.addNonProfitToWhitelist(nonProfit.address);
+      await token.approve(pool.address, 10);
+      await pool.addBalance(10);
+    });
+
+    describe("when the non profit is on whitelist", () => {
+      describe("when the pool have enough balance", () => {
+        it("decreases the pool balance", async function () {
+          expect(await token.balanceOf(pool.address)).to.equal(10);
+          await pool.connect(manager).donateThroughIntegration(
+            nonProfit.address,
             integration.address,
             user,
             10
+          );
+
+          expect(await token.balanceOf(pool.address)).to.equal(0);
+        });
+
+        it("emits DonationAdded event", async function () {
+
+          await expect(
+            pool.connect(manager).donateThroughIntegration(nonProfit.address, integration.address, user, 10)
           )
-        ).to.be.revertedWith("Not a whitelisted nonprofit");
+            .to.emit(pool, "DonationAdded")
+            .withArgs(user, integration.address, nonProfit.address, 10);
+        });
       });
+
+      describe("when the pool don't have enough balance", () => {
+        it("reverts the transaction", async function () {
+          await expect(
+            pool.connect(manager).donateThroughIntegration(nonProfit.address,integration.address, user, 100)
+          ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+        });
+      });
+
+      describe("when the amount is 0", () => {
+        it("reverts the transaction", async function () {
+          await expect(
+            pool.connect(manager).donateThroughIntegration(nonProfit.address,integration.address, user, 0)
+          ).to.be.revertedWith("Amount must be greater than 0");
+        });
+      });
+    });
+  });
+  
+  describe("when non profit is not on whitelist", () => {
+    it("reverts the transaction", async function () { 
+      await expect(
+        pool.connect(manager).donateThroughIntegration(
+          nonProfitCouncil.address,
+          integration.address,
+          user,
+          10
+        )
+      ).to.be.revertedWith("Not a whitelisted nonprofit");
     });
   });
 });

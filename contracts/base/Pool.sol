@@ -12,11 +12,13 @@ contract Pool is IPool {
     using SafeERC20 for IERC20;
     IERC20 public token;
 
-    address public owner;
+    address public manager;
     address public nonProfitCouncil;
 
     mapping(address => bool) public nonProfits;
     
+    event NonProfitAdded(address nonProfit);
+    event NonProfitRemoved(address nonProfit);
     event BalanceIncreased(address promoter, uint256 amount);
     event DonationAdded(
         bytes32 user,
@@ -25,10 +27,25 @@ contract Pool is IPool {
         uint256 amount
     );
 
-    constructor(address _token, address _owner, address _nonProfit) {
+    constructor(address _token, address _manager) {
         token = IERC20(_token);
-        owner = _owner;
+        manager = _manager;
+    }
+
+    function addNonProfitToWhitelist(address _nonProfit) public {
+        require(msg.sender == manager, "You are not the manager");
+
         nonProfits[_nonProfit] = true;
+
+        emit NonProfitAdded(_nonProfit);
+    }
+
+    function removeNonProfitFromWhitelist(address _nonProfit) public {
+        require(msg.sender == manager, "You are not the manager");
+
+        nonProfits[_nonProfit] = false;
+
+        emit NonProfitRemoved(_nonProfit);
     }
 
     function addBalance(uint256 _amount) external {
@@ -46,8 +63,8 @@ contract Pool is IPool {
         uint256 _amount
     ) external {
         require(
-            msg.sender == owner,
-            "Forbidden"
+            msg.sender == manager,
+            "You are not the manager"
         );
         require(
             nonProfits[_nonProfit],
