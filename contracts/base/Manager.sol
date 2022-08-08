@@ -12,6 +12,8 @@ contract Manager is IManager {
     address public governanceCouncil;
 
     mapping(address => uint256) public integrations;
+    event NonProfitAdded(address nonProfit);
+    event NonProfitRemoved(address nonProfit);
     event IntegrationBalanceAdded(address integration, uint256 amount);
     event IntegrationBalanceRemoved(address integration, uint256 amount);
     event DonationAdded(
@@ -30,6 +32,24 @@ contract Manager is IManager {
         governanceCouncil = _governanceCouncil;
         integrationCouncil = _integrationCouncil;
         nonProfitCouncil = _nonProfitCouncil;
+    }
+
+    function addNonProfitToWhitelist(address _pool, address _nonProfit) public {
+        require(msg.sender == nonProfitCouncil, "You are not the non profit council");
+
+        IPool pool = IPool(_pool);
+        pool.addNonProfitToWhitelist(_nonProfit);
+
+        emit NonProfitAdded(_nonProfit);
+    }
+
+    function removeNonProfitFromWhitelist(address _pool, address _nonProfit) public {
+        require(msg.sender == nonProfitCouncil, "You are not the non profit council");
+
+        IPool pool = IPool(_pool);
+        pool.removeNonProfitFromWhitelist(_nonProfit);
+
+        emit NonProfitAdded(_nonProfit);
     }
 
     function addIntegrationBalance(address _integration, uint256 _amount)
@@ -80,6 +100,8 @@ contract Manager is IManager {
 
         IPool pool = IPool(_pool);
         pool.donateThroughIntegration(_nonProfit, msg.sender, _user, _amount);
+        
+        integrations[msg.sender] -= _amount;
 
         emit DonationAdded(_pool, _user, msg.sender, _nonProfit, _amount);
     }

@@ -32,7 +32,7 @@ contract Pool is IPool {
         manager = _manager;
     }
 
-    function addNonProfitToWhitelist(address _nonProfit) public {
+    function addNonProfitToWhitelist(address _nonProfit) external {
         require(msg.sender == manager, "You are not the manager");
 
         nonProfits[_nonProfit] = true;
@@ -40,7 +40,7 @@ contract Pool is IPool {
         emit NonProfitAdded(_nonProfit);
     }
 
-    function removeNonProfitFromWhitelist(address _nonProfit) public {
+    function removeNonProfitFromWhitelist(address _nonProfit) external {
         require(msg.sender == manager, "You are not the manager");
 
         nonProfits[_nonProfit] = false;
