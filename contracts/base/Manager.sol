@@ -108,8 +108,8 @@ contract Manager is IManager {
 
     function setNonProfitCouncil(address _nonProfitCouncil) public {
         require(
-            msg.sender == nonProfitCouncil,
-            "You are not the non profit council"
+            msg.sender == governanceCouncil,
+            "You are not the governance council"
         );
 
         nonProfitCouncil = _nonProfitCouncil;
@@ -117,8 +117,8 @@ contract Manager is IManager {
 
     function setIntegrationCouncil(address _integrationCouncil) public {
         require(
-            msg.sender == integrationCouncil,
-            "You are not the integration council"
+            msg.sender == governanceCouncil,
+            "You are not the governance council"
         );
 
         integrationCouncil = _integrationCouncil;
