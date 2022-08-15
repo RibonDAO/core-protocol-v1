@@ -24,6 +24,11 @@ contract Manager is IManager {
         uint256 amount
     );
 
+    event NonProfitCouncilChanged(address nonProfitCouncil);
+    event IntegrationCouncilChanged(address integrationCouncil);
+    event GovernanceCouncilChanged(address governanceCouncil);
+    event PoolBalanceTransfered(address pool, address wallet);
+
     constructor(
         address _governanceCouncil,
         address _integrationCouncil,
@@ -111,6 +116,8 @@ contract Manager is IManager {
         );
 
         nonProfitCouncil = _nonProfitCouncil;
+
+        emit NonProfitCouncilChanged(nonProfitCouncil);
     }
 
     function setIntegrationCouncil(address _integrationCouncil) external {
@@ -120,6 +127,8 @@ contract Manager is IManager {
         );
 
         integrationCouncil = _integrationCouncil;
+
+        emit IntegrationCouncilChanged(integrationCouncil);
     }
 
     function setGovernanceCouncil(address _integrationCouncil) external {
@@ -129,5 +138,19 @@ contract Manager is IManager {
         );
 
         integrationCouncil = _integrationCouncil;
+
+        emit GovernanceCouncilChanged(integrationCouncil);
+    }
+
+    function transferPoolBalance(address _pool, address _wallet) external {
+        require(
+            msg.sender == governanceCouncil,
+            "You are not the governance council"
+        );
+
+        IPool pool = IPool(_pool);
+        pool.transferBalance(_wallet);
+
+        emit PoolBalanceTransfered(_pool, _wallet);
     }
 }

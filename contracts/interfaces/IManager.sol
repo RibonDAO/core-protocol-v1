@@ -7,4 +7,5 @@ interface IManager {
     function setNonProfitCouncil(address) external;
     function setIntegrationCouncil(address) external;
     function donateThroughIntegration(address, address, bytes32, uint256) external;
+    function transferPoolBalance(address, address) external;
 }

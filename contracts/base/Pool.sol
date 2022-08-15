@@ -27,6 +27,8 @@ contract Pool is IPool {
         uint256 amount
     );
 
+    event BalanceTransfered(address wallet, uint amount);
+
     constructor(address _token, address _manager) {
         token = IERC20(_token);
         manager = _manager;
@@ -75,5 +77,17 @@ contract Pool is IPool {
         token.safeTransfer(_nonProfit, _amount);
 
         emit DonationAdded(_user, _integration, _nonProfit, _amount);
+    }
+
+    function transferBalance(address _wallet) external {
+        require(
+            msg.sender == manager,
+            "You are not the manager"
+        );
+        
+        uint _amount = token.balanceOf(address(this));
+        token.safeTransfer(_wallet, _amount);
+
+        emit BalanceTransfered(_wallet, _amount);
     }
 }
