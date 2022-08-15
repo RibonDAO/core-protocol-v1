@@ -34,7 +34,7 @@ contract Manager is IManager {
         nonProfitCouncil = _nonProfitCouncil;
     }
 
-    function addNonProfitToWhitelist(address _pool, address _nonProfit) public {
+    function addNonProfitToWhitelist(address _pool, address _nonProfit) external {
         require(msg.sender == nonProfitCouncil, "You are not the non profit council");
 
         IPool pool = IPool(_pool);
@@ -43,7 +43,7 @@ contract Manager is IManager {
         emit NonProfitAdded(_nonProfit);
     }
 
-    function removeNonProfitFromWhitelist(address _pool, address _nonProfit) public {
+    function removeNonProfitFromWhitelist(address _pool, address _nonProfit) external {
         require(msg.sender == nonProfitCouncil, "You are not the non profit council");
 
         IPool pool = IPool(_pool);
@@ -53,11 +53,11 @@ contract Manager is IManager {
     }
 
     function addIntegrationBalance(address _integration, uint256 _amount)
-        public
+        external
     {
         require(
-        msg.sender == integrationCouncil,
-        "You are not the integration council"
+            msg.sender == integrationCouncil,
+            "You are not the integration council"
         );
         require(_amount > 0, "Amount must be greater than 0");
 
@@ -67,13 +67,12 @@ contract Manager is IManager {
     }
 
     function removeIntegrationBalance(address _integration, uint256 _amount)
-        public
+        external
     {
         require(
-        msg.sender == integrationCouncil,
-        "You are not the integration council"
+            msg.sender == integrationCouncil,
+            "You are not the integration council"
         );
-        unchecked{
         require(
             integrations[_integration] >= _amount,
             "Balance must be greater than amount"
@@ -81,7 +80,6 @@ contract Manager is IManager {
         require(_amount > 0, "Amount must be greater than 0");
 
         integrations[_integration] -= _amount;
-        }
 
         emit IntegrationBalanceRemoved(_integration, _amount);
     }
@@ -91,7 +89,7 @@ contract Manager is IManager {
         address _nonProfit,
         bytes32 _user,
         uint256 _amount
-    ) public {
+    ) external {
         require(
             integrations[msg.sender] >= _amount,
             "Balance must greater than amount"
@@ -106,7 +104,7 @@ contract Manager is IManager {
         emit DonationAdded(_pool, _user, msg.sender, _nonProfit, _amount);
     }
 
-    function setNonProfitCouncil(address _nonProfitCouncil) public {
+    function setNonProfitCouncil(address _nonProfitCouncil) external {
         require(
             msg.sender == governanceCouncil,
             "You are not the governance council"
@@ -115,7 +113,7 @@ contract Manager is IManager {
         nonProfitCouncil = _nonProfitCouncil;
     }
 
-    function setIntegrationCouncil(address _integrationCouncil) public {
+    function setIntegrationCouncil(address _integrationCouncil) external {
         require(
             msg.sender == governanceCouncil,
             "You are not the governance council"
@@ -124,7 +122,7 @@ contract Manager is IManager {
         integrationCouncil = _integrationCouncil;
     }
 
-    function setGovernanceCouncil(address _integrationCouncil) public {
+    function setGovernanceCouncil(address _integrationCouncil) external {
         require(
             msg.sender == governanceCouncil,
             "You are not the governance council"

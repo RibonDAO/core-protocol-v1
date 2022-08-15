@@ -10,7 +10,7 @@ import "../interfaces/IPool.sol";
 
 contract Pool is IPool {
     using SafeERC20 for IERC20;
-    IERC20 public token;
+    IERC20 immutable public token;
 
     address public manager;
     address public nonProfitCouncil;
