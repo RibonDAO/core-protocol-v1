@@ -12,8 +12,7 @@ contract Pool is IPool {
     using SafeERC20 for IERC20;
     IERC20 immutable public token;
 
-    address public manager;
-    address public nonProfitCouncil;
+    address immutable public manager;
 
     mapping(address => bool) public nonProfits;
     
