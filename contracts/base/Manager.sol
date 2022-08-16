@@ -131,7 +131,7 @@ contract Manager is IManager {
         emit IntegrationCouncilChanged(integrationCouncil);
     }
 
-    function setGovernanceCouncil(address _integrationCouncil) external {
+    function setGovernanceCouncil(address _governanceCouncil) external {
         require(
             msg.sender == governanceCouncil,
             "You are not the governance council"

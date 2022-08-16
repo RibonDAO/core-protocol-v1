@@ -81,4 +81,32 @@ describe("PoolFactory", function () {
       })
     });
   });
+
+  describe("#fetchPools", () => {
+    describe("when fetch pools sucessfully", () => {
+      beforeEach(async () =>{
+        await poolFactory.createPool(token.address);
+        await poolFactory.createPool(token.address);
+        await poolFactory.createPool(token.address);
+        await poolFactory.createPool(token.address);
+        await poolFactory.createPool(token.address);
+        await poolFactory.createPool(token.address);
+      });
+
+      it("should return 3 pools", async function () {
+        const pools = await poolFactory.fetchPools(0, 3);
+        expect(pools[0].length).to.equal(3);
+      })
+
+      it("should return all pools", async function () {
+        const pools = await poolFactory.fetchPools(0, 300);
+        expect(pools[0].length).to.equal(6);
+      })
+
+      it("should return 0 pools", async function () {
+        const pools = await poolFactory.fetchPools(0, 0);
+        expect(pools[0].length).to.equal(0);
+      })
+    });
+  });
 });

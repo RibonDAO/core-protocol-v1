@@ -32,4 +32,17 @@ contract PoolFactory is IPoolFactory {
     function getPools() public view returns(address [] memory) {
         return pools;
     }
+    
+    function fetchPools(uint256 _index, uint256 _length) public view returns (address[] memory _pools, uint256 _newIndex) {
+        if (_length > pools.length - _index) {
+            _length = pools.length - _index;
+        }
+
+        _pools = new address[](_length);
+        for (uint256 i = 0; i < _length; i++) {
+            _pools[i] = pools[_index + i];
+        }
+
+        return (_pools, _index + _length);
+    }
 }
