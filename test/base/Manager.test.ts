@@ -204,14 +204,14 @@ describe("Manager", function () {
   describe('#setIntegrationCouncil', () => {
     describe('when the caller is the governance council', () => {
       it('should set the integration council', async () => {
-        await manager.connect(governanceCouncil).setIntegrationCouncil(integrationCouncil.address);
-        expect(await manager.integrationCouncil()).to.eq(integrationCouncil.address);
+        await manager.connect(governanceCouncil).setIntegrationCouncil(governanceCouncil.address);
+        expect(await manager.integrationCouncil()).to.eq(governanceCouncil.address);
       });
     });
 
     describe('when the caller is not the governance council', () => {
       it('should revert', async () => {
-        await expect(manager.connect(integrationCouncil).setIntegrationCouncil(integrationCouncil.address))
+        await expect(manager.connect(integrationCouncil).setIntegrationCouncil(governanceCouncil.address))
           .to.be.revertedWith("You are not the governance council");
       });
     });
@@ -220,13 +220,13 @@ describe("Manager", function () {
   describe('#setGovernanceCouncil', () => {
     describe('when the caller is the governance council', () => {
       it('should set the governance council', async () => {
-        await manager.connect(governanceCouncil).setGovernanceCouncil(governanceCouncil.address);
-        expect(await manager.governanceCouncil()).to.eq(governanceCouncil.address);
+        await manager.connect(governanceCouncil).setGovernanceCouncil(integration.address);
+        expect(await manager.governanceCouncil()).to.eq(integration.address);
       });
     }),
     describe('when the caller is not the governance council', () => {
       it('should revert', async () => {
-        await expect(manager.connect(nonProfitCouncil).setGovernanceCouncil(governanceCouncil.address))
+        await expect(manager.connect(nonProfitCouncil).setGovernanceCouncil(integration.address))
           .to.be.revertedWith("You are not the governance council");
       });
     });
