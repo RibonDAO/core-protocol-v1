@@ -10,7 +10,7 @@ import "./Pool.sol";
 import "../interfaces/IPoolFactory.sol";
 
 contract PoolFactory is IPoolFactory {
-    address public manager;
+    address immutable public manager;
     address[] public pools;
 
     event PoolCreated(

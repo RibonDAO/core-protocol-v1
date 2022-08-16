@@ -52,8 +52,10 @@ contract Pool is IPool {
 
     function addBalance(uint256 _amount) external {
         require(_amount > 0, "Amount must be greater than 0");
-
+        
+        uint256 before = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), _amount);
+        _amount = token.balanceOf(address(this)) - before;
 
         emit BalanceIncreased(msg.sender, _amount);
     }
@@ -73,6 +75,10 @@ contract Pool is IPool {
             "Not a whitelisted nonprofit"
         );
         require(_amount > 0, "Amount must be greater than 0");
+        
+        uint256 before = token.balanceOf(address(this));
+        token.safeTransfer(_nonProfit, _amount); 
+        _amount = token.balanceOf(address(this)) - before; 
 
         token.safeTransfer(_nonProfit, _amount);
 
