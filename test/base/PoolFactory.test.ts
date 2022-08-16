@@ -46,8 +46,8 @@ describe("PoolFactory", function () {
       });
 
       it("should increase pools length by 1", async function () {
-        const pools = await poolFactory.getPools();
-        expect(pools.length).to.equal(1);
+        const pools = await poolFactory.fetchPools(0, 1);
+        expect(pools[0].length).to.equal(1);
       });
 
       it("emits PoolCreated event", async function () {
@@ -71,9 +71,9 @@ describe("PoolFactory", function () {
       });
 
       it("should increase pools length by 1", async function () {
-        const pools = await poolFactory.getPools();
+        const pools = await poolFactory.fetchPools(0, 1);
         const poolContract = await ethers.getContractFactory('Pool')
-        const pool = await new ethers.Contract(pools[0], poolContract.interface)
+        const pool = await new ethers.Contract(pools[0][0], poolContract.interface)
         await token.approve(pool.address, 10);
         await pool.connect(manager).addBalance(10);
         const balance = await token.balanceOf(pool.address);

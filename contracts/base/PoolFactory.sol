@@ -28,10 +28,6 @@ contract PoolFactory is IPoolFactory {
         pools.push(pool);
         emit PoolCreated(pool, _token);
     }
-
-    function getPools() public view returns(address [] memory) {
-        return pools;
-    }
     
     function fetchPools(uint256 _index, uint256 _length) public view returns (address[] memory _pools, uint256 _newIndex) {
         if (_length > pools.length - _index) {
