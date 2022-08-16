@@ -101,10 +101,10 @@ contract Manager is IManager {
         );
         require(_amount > 0, "Amount must be greater than 0");
 
+        integrations[msg.sender] -= _amount;
+
         IPool pool = IPool(_pool);
         pool.donateThroughIntegration(_nonProfit, msg.sender, _user, _amount);
-        
-        integrations[msg.sender] -= _amount;
 
         emit DonationAdded(_pool, _user, msg.sender, _nonProfit, _amount);
     }
@@ -137,9 +137,9 @@ contract Manager is IManager {
             "You are not the governance council"
         );
 
-        integrationCouncil = _integrationCouncil;
+        governanceCouncil = _governanceCouncil;
 
-        emit GovernanceCouncilChanged(integrationCouncil);
+        emit GovernanceCouncilChanged(governanceCouncil);
     }
 
     function transferPoolBalance(address _pool, address _wallet) external {
