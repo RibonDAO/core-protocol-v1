@@ -231,4 +231,22 @@ describe("Manager", function () {
       });
     });
   });
+
+  describe('#transferPoolBalance', () => {
+    describe('when the caller is the governance council', () => {
+      it('should change balances', async () => {
+        await token.approve(pool.address, 100);
+        await pool.addBalance(100);
+        await manager.connect(governanceCouncil).transferPoolBalance(pool.address, nonProfitCouncil.address);
+        expect(await token.balanceOf(pool.address)).to.eq(0);
+        expect(await token.balanceOf(nonProfitCouncil.address)).to.eq(100);
+      });
+    }),
+    describe('when the caller is not the governance council', () => {
+      it('should revert', async () => {
+        await expect(manager.connect(nonProfitCouncil).setGovernanceCouncil(governanceCouncil.address))
+          .to.be.revertedWith("You are not the governance council");
+      });
+    });
+  });
 });
