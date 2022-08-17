@@ -75,7 +75,7 @@ contract Pool is IPool {
         );
         require(_amount > 0, "Amount must be greater than 0");
         
-        uint256 before = token.balanceOf(address(this));
+        uint256 before = token.balanceOf(_nonProfit);
         token.safeTransfer(_nonProfit, _amount); 
         _amount = before - token.balanceOf(address(this)); 
 

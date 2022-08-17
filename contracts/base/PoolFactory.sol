@@ -29,7 +29,7 @@ contract PoolFactory is IPoolFactory {
         emit PoolCreated(pool, _token);
     }
     
-    function fetchPools(uint256 _index, uint256 _length) public view returns (address[] memory _pools, uint256 _newIndex) {
+    function fetchPools(uint256 _index, uint256 _length) external view returns (address[] memory _pools, uint256 _newIndex) {
         if (_length > pools.length - _index) {
             _length = pools.length - _index;
         }
