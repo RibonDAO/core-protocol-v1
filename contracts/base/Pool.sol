@@ -77,7 +77,7 @@ contract Pool is IPool {
         
         uint256 before = token.balanceOf(_nonProfit);
         token.safeTransfer(_nonProfit, _amount); 
-        _amount = before - token.balanceOf(address(this)); 
+        _amount = before - token.balanceOf(_nonProfit);
 
         emit DonationAdded(_user, _integration, _nonProfit, _amount);
     }
