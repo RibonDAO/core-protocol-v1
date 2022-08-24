@@ -50,6 +50,70 @@ describe("Manager", function () {
     ;({ manager, pool, token } = await loadFixture(fixture))
   })
 
+  describe("#createPool", () => {
+    describe("#createPool", () => {
+      describe("when you are the manager", () => {
+        beforeEach(async () =>{
+          await manager.connect(nonProfitCouncil).createPool(token.address);
+        });
+  
+        it("should increase pools length by 1", async function () {
+          const pools = await manager.fetchPools(0, 1);
+          expect(pools[0].length).to.equal(1);
+        });
+  
+        it("emits PoolCreated event", async function () {
+          await expect(manager.connect(nonProfitCouncil).createPool(token.address))
+            .to.emit(manager, "PoolCreated");
+        });
+      });
+  
+      describe("when you are not the manager", () => {
+        it("reverts the transaction", async function () {
+          await expect(manager.connect(nonProfit).createPool(token.address))
+            .to.be.revertedWith("You are not the non profit council");
+        });
+      });
+    });
+  });
+
+  describe("#addPoolBalance", () => {
+    describe("when you have suficient balance", () => {
+      beforeEach(async () =>{
+        await token.approve(manager.address, 10);
+        await manager.addPoolBalance(pool.address, 10);
+      });
+
+      it("should increase contract donation token's balance", async function () {
+        const balance = await token.balanceOf(pool.address);
+        expect(balance).to.equal(10);
+      });
+
+      it("should increase donation pool balance", async function () {
+        const balance = await token.balanceOf(pool.address);
+        expect(balance).to.equal(10);
+      });
+
+      it("emits PoolBalanceIncreased event", async function () {
+        await manager.connect(nonProfitCouncil).createPool(token.address);
+        const pools = await manager.fetchPools(0,1);
+        await token.approve(manager.address, 10);
+
+        await expect(manager.addPoolBalance(pool.address, 10))
+          .to.emit(manager, "PoolBalanceIncreased")
+          .withArgs(governanceCouncil.address, pool.address, 10);
+      });
+    });
+    
+    describe("when amount is 0", () => {
+      it("reverts the transaction", async function () {
+        await expect(
+          manager.addPoolBalance(manager.address, 0)
+        ).to.be.revertedWith("Amount must be greater than 0");
+      });
+    });
+  });
+
   describe("#addNonProfitToWhitelist", () => {
     describe("when you are the non profit council", () => {
       it("adds the non profit to the whitelist", async function () {
