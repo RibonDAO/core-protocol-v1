@@ -1,19 +1,29 @@
 // SPDX-License-Identifier: GNU
 pragma solidity 0.8.14;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IManager.sol";
 import "../interfaces/IPool.sol";
+import "./Pool.sol";
+
 
 contract Manager is IManager {
+    using SafeERC20 for IERC20;
     address public integrationCouncil;
     address public nonProfitCouncil;
     address public governanceCouncil;
 
     mapping(address => uint256) public integrations;
-    event NonProfitAdded(address nonProfit);
-    event NonProfitRemoved(address nonProfit);
+    address[] public pools;
+
+    event PoolCreated(address pool, address token);
+    event PoolBalanceIncreased(address promoter, address pool, uint amount);
+    event NonProfitAdded(address pool, address nonProfit);
+    event NonProfitRemoved(address pool, address nonProfit);
     event IntegrationBalanceAdded(address integration, uint256 amount);
     event IntegrationBalanceRemoved(address integration, uint256 amount);
     event DonationAdded(
@@ -39,13 +49,45 @@ contract Manager is IManager {
         nonProfitCouncil = _nonProfitCouncil;
     }
 
+    function createPool(address _token) external {
+        require(msg.sender == nonProfitCouncil, "You are not the non profit council");
+        address pool = address(new Pool(_token, msg.sender));
+        pools.push(pool);
+        emit PoolCreated(pool, _token);
+    }
+
+    function fetchPools(uint256 _index, uint256 _length) external view returns (address[] memory _pools, uint256 _newIndex) {
+        if (_length > pools.length - _index) {
+            _length = pools.length - _index;
+        }
+
+        _pools = new address[](_length);
+        for (uint256 i = 0; i < _length; i++) {
+            _pools[i] = pools[_index + i];
+        }
+
+        return (_pools, _index + _length);
+    }
+
+    function addPoolBalance(address _pool, uint256 _amount) external {
+        require(_amount > 0, "Amount must be greater than 0");
+        
+
+        IPool pool = IPool(_pool);
+        IERC20 token = IERC20(pool.token());
+        
+        token.safeTransferFrom(msg.sender, _pool, _amount);
+
+        emit PoolBalanceIncreased(msg.sender, _pool, _amount);
+    }
+    
     function addNonProfitToWhitelist(address _pool, address _nonProfit) external {
         require(msg.sender == nonProfitCouncil, "You are not the non profit council");
 
         IPool pool = IPool(_pool);
         pool.addNonProfitToWhitelist(_nonProfit);
 
-        emit NonProfitAdded(_nonProfit);
+        emit NonProfitAdded(_pool, _nonProfit);
     }
 
     function removeNonProfitFromWhitelist(address _pool, address _nonProfit) external {
@@ -54,7 +96,7 @@ contract Manager is IManager {
         IPool pool = IPool(_pool);
         pool.removeNonProfitFromWhitelist(_nonProfit);
 
-        emit NonProfitAdded(_nonProfit);
+        emit NonProfitAdded(_pool, _nonProfit);
     }
 
     function addIntegrationBalance(address _integration, uint256 _amount)

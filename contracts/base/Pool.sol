@@ -49,16 +49,6 @@ contract Pool is IPool {
         emit NonProfitRemoved(_nonProfit);
     }
 
-    function addBalance(uint256 _amount) external {
-        require(_amount > 0, "Amount must be greater than 0");
-        
-        uint256 before = token.balanceOf(address(this));
-        token.safeTransferFrom(msg.sender, address(this), _amount);
-        _amount = token.balanceOf(address(this)) - before;
-
-        emit BalanceIncreased(msg.sender, _amount);
-    }
-
     function donateThroughIntegration(
         address _nonProfit,
         address _integration,
@@ -75,9 +65,7 @@ contract Pool is IPool {
         );
         require(_amount > 0, "Amount must be greater than 0");
         
-        uint256 before = token.balanceOf(_nonProfit);
         token.safeTransfer(_nonProfit, _amount); 
-        _amount = before - token.balanceOf(_nonProfit);
 
         emit DonationAdded(_user, _integration, _nonProfit, _amount);
     }

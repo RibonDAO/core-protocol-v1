@@ -84,63 +84,11 @@ describe("Pool", function () {
     });
   });
 
-  describe("#addBalance", () => {
-    describe("when you have suficient balance", () => {
-      beforeEach(async () =>{
-        await token.approve(pool.address, 10);
-        await pool.addBalance(10);
-      });
-
-      it("should increase contract donation token's balance", async function () {
-        const balance = await token.balanceOf(pool.address);
-        expect(balance).to.equal(10);
-      });
-
-      it("should increase donation pool balance", async function () {
-        const balance = await token.balanceOf(pool.address);
-        expect(balance).to.equal(10);
-      });
-
-      it("emits PoolBalanceIncreased event", async function () {
-        await token.approve(pool.address, 10);
-
-        await expect(pool.connect(manager).addBalance(10))
-          .to.emit(pool, "BalanceIncreased")
-          .withArgs(manager.address, 10);
-      });
-    });
-    
-    describe("when amount is 0", () => {
-      it("reverts the transaction", async function () {
-        await expect(
-          pool.addBalance(0)
-        ).to.be.revertedWith("Amount must be greater than 0");
-      });
-    });
-
-    describe("when have insuficient allowance", () => {
-      it("reverts the transaction", async function () {
-        await expect(
-          pool.connect(manager).addBalance(10)
-        ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
-      });
-    });
-
-    describe("when have insuficient funds", () => {
-      it("reverts the transaction", async function () {
-        await token.connect(nonProfitCouncil).approve(pool.address, 20);
-        await expect(
-          pool.connect(nonProfitCouncil).addBalance(10)
-        ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-      });
-    });
-  });
-
   describe("#donateThroughIntegration", () => {
     beforeEach(async () =>{
       await pool.addNonProfitToWhitelist(nonProfit.address);
-      await token.approve(pool.address, 10);
-      await pool.addBalance(10);
+      await token.approve(manager.address, 10);
+      await token.transferFrom(manager.address, pool.address, 10);
     });
 
     describe("when the non profit is on whitelist", () => {

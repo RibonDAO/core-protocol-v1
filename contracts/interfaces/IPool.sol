@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GNU
 pragma solidity 0.8.14;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 interface IPool {
-    function addBalance(uint256) external;
+    function token() external view returns(IERC20);
     function donateThroughIntegration(address,address,bytes32,uint256) external;
     function addNonProfitToWhitelist(address) external;
     function removeNonProfitFromWhitelist(address) external;
