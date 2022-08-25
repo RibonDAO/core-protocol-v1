@@ -11,21 +11,7 @@ async function main() {
   );
   await manager.deployed();
 
-  const PoolFactoryContract = await ethers.getContractFactory("PoolFactory");
-  const poolFactory = await PoolFactoryContract.deploy(
-    owner.address
-  );
-  await poolFactory.deployed();
-
-  console.log("PoolFactory deployed to:", poolFactory.address);
-
-  const PoolFactoryContract = await ethers.getContractFactory("PoolFactory");
-  const poolFactory = await PoolFactoryContract.deploy(
-    owner.address
-  );
-  await poolFactory.deployed();
-
-  console.log("PoolFactory deployed to:", poolFactory.address);
+  console.log("Manager deployed to:", manager.address);
 }
 
 main().catch((error) => {
