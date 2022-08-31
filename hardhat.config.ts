@@ -20,6 +20,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 const config: HardhatUserConfig = {
   solidity: "0.8.14",
   networks: {
+    mainnet: {
+      url: process.env.MAINNET_RPC_KEY || "",
+      accounts:
+        process.env.MAINNET_PRIVATE_KEY !== undefined
+          ? [process.env.MAINNET_PRIVATE_KEY]
+          : [],
+    },
     testnet: {
       url: process.env.TESTNET_RPC_KEY || "",
       accounts:
