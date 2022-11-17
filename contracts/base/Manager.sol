@@ -49,11 +49,12 @@ contract Manager is IManager {
         nonProfitCouncil = _nonProfitCouncil;
     }
 
-    function createPool(address _token) external {
+    function createPool(address _token) external returns (address) {
         require(msg.sender == nonProfitCouncil, "You are not the non profit council");
         address pool = address(new Pool(_token, msg.sender));
         pools.push(pool);
         emit PoolCreated(pool, _token);
+        return pool;
     }
 
     function fetchPools(uint256 _index, uint256 _length) external view returns (address[] memory _pools, uint256 _newIndex) {
