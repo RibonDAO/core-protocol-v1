@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IPool {
     function token() external view returns(IERC20);
-    function donateThroughIntegration(address,address,bytes32,uint256) external;
+    function donateThroughIntegration(address,address,uint256) external;
     function addNonProfitToWhitelist(address) external;
     function removeNonProfitFromWhitelist(address) external;
     function transferBalance(address) external;
