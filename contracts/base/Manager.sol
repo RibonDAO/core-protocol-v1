@@ -6,12 +6,11 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../interfaces/IManager.sol";
 import "../interfaces/IPool.sol";
 import "./Pool.sol";
 
 
-contract Manager is IManager {
+contract Manager {
     using SafeERC20 for IERC20;
     address public integrationCouncil;
     address public nonProfitCouncil;
@@ -28,9 +27,9 @@ contract Manager is IManager {
     event IntegrationBalanceRemoved(address integration, uint256 amount);
     event DonationAdded(
         address pool,
-        bytes32 user,
-        address integration,
         address nonProfit,
+        address integration,
+        string _donation_batch,
         uint256 amount
     );
 
@@ -49,11 +48,12 @@ contract Manager is IManager {
         nonProfitCouncil = _nonProfitCouncil;
     }
 
-    function createPool(address _token) external {
+    function createPool(address _token) external returns (address) {
         require(msg.sender == nonProfitCouncil, "You are not the non profit council");
         address pool = address(new Pool(_token, msg.sender));
         pools.push(pool);
         emit PoolCreated(pool, _token);
+        return pool;
     }
 
     function fetchPools(uint256 _index, uint256 _length) external view returns (address[] memory _pools, uint256 _newIndex) {
@@ -134,7 +134,8 @@ contract Manager is IManager {
     function donateThroughIntegration(
         address _pool,
         address _nonProfit,
-        bytes32 _user,
+        address _integration,
+        string memory _donation_batch,
         uint256 _amount
     ) external {
         require(
@@ -146,9 +147,9 @@ contract Manager is IManager {
         integrations[msg.sender] -= _amount;
 
         IPool pool = IPool(_pool);
-        pool.donateThroughIntegration(_nonProfit, msg.sender, _user, _amount);
-
-        emit DonationAdded(_pool, _user, msg.sender, _nonProfit, _amount);
+        pool.donateThroughIntegration(_nonProfit, _integration, _amount);
+        
+        emit DonationAdded(_pool, _nonProfit, _integration, _donation_batch, _amount);
     }
 
     function setNonProfitCouncil(address _nonProfitCouncil) external {

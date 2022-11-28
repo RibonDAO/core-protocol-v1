@@ -5,7 +5,6 @@ import { Pool, TestERC20 } from "../../typechain"
 import { Fixture } from 'ethereum-waffle'
 
 describe("Pool", function () {
-  const user = "0xd229e8696a794bb2669821b444690c05f1faa8337ffba5053914b66c99dd39e0";
   let nonProfitCouncil: Wallet;
   let nonProfit: Wallet;
   let integration: Wallet;
@@ -98,7 +97,6 @@ describe("Pool", function () {
           await pool.connect(manager).donateThroughIntegration(
             nonProfit.address,
             integration.address,
-            user,
             10
           );
 
@@ -108,17 +106,17 @@ describe("Pool", function () {
         it("emits DonationAdded event", async function () {
 
           await expect(
-            pool.connect(manager).donateThroughIntegration(nonProfit.address, integration.address, user, 10)
+            pool.connect(manager).donateThroughIntegration(nonProfit.address, integration.address, 10)
           )
             .to.emit(pool, "DonationAdded")
-            .withArgs(user, integration.address, nonProfit.address, 10);
+            .withArgs(integration.address, nonProfit.address, 10);
         });
       });
 
       describe("when the pool don't have enough balance", () => {
         it("reverts the transaction", async function () {
           await expect(
-            pool.connect(manager).donateThroughIntegration(nonProfit.address,integration.address, user, 100)
+            pool.connect(manager).donateThroughIntegration(nonProfit.address,integration.address, 100)
           ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
         });
       });
@@ -126,7 +124,7 @@ describe("Pool", function () {
       describe("when the amount is 0", () => {
         it("reverts the transaction", async function () {
           await expect(
-            pool.connect(manager).donateThroughIntegration(nonProfit.address,integration.address, user, 0)
+            pool.connect(manager).donateThroughIntegration(nonProfit.address,integration.address, 0)
           ).to.be.revertedWith("Amount must be greater than 0");
         });
       });
@@ -138,7 +136,6 @@ describe("Pool", function () {
           pool.connect(manager).donateThroughIntegration(
             nonProfitCouncil.address,
             integration.address,
-            user,
             10
           )
         ).to.be.revertedWith("Not a whitelisted nonprofit");
@@ -148,7 +145,7 @@ describe("Pool", function () {
     describe("when you are not the manager", () => {
       it("reverts the transaction", async function () {
         await expect(
-          pool.connect(nonProfit).donateThroughIntegration(nonProfit.address, integration.address, user, 10)
+          pool.connect(nonProfit).donateThroughIntegration(nonProfit.address, integration.address, 10)
         ).to.be.revertedWith("You are not the manager");
       });
     });
@@ -156,7 +153,7 @@ describe("Pool", function () {
     describe("when the amount is 0", () => {
       it("reverts the transaction", async function () {
         await expect(
-          pool.connect(manager).donateThroughIntegration(nonProfit.address, integration.address, user, 0)
+          pool.connect(manager).donateThroughIntegration(nonProfit.address, integration.address, 0)
         ).to.be.revertedWith("Amount must be greater than 0");
       });
     });

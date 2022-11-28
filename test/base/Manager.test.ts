@@ -3,9 +3,10 @@ import { waffle, ethers } from 'hardhat'
 import { Wallet } from 'ethers'
 import { Manager, Pool, TestERC20 } from "../../typechain"
 import { Fixture } from 'ethereum-waffle'
+import { Address } from "cluster"
 
 describe("Manager", function () {
-  const user = "0xd229e8696a794bb2669821b444690c05f1faa8337ffba5053914b66c99dd39e0";
+  const donation_batch = "bafkreibmaeybgubr65dsgrzbyzml34ambyzhystdmfznltlkbqpi4cjdge";
 
   let governanceCouncil: Wallet;
   let integrationCouncil: Wallet;
@@ -38,6 +39,8 @@ describe("Manager", function () {
   let pool: Pool;
   let token: TestERC20;
 
+  let poolAddress;
+
   let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
   before('create fixture loader', async () => {
@@ -53,8 +56,9 @@ describe("Manager", function () {
   describe("#createPool", () => {
     describe("#createPool", () => {
       describe("when you are the manager", () => {
+
         beforeEach(async () =>{
-          await manager.connect(nonProfitCouncil).createPool(token.address);
+          poolAddress = await manager.connect(nonProfitCouncil).createPool(token.address);
         });
   
         it("should increase pools length by 1", async function () {
@@ -65,6 +69,24 @@ describe("Manager", function () {
         it("emits PoolCreated event", async function () {
           await expect(manager.connect(nonProfitCouncil).createPool(token.address))
             .to.emit(manager, "PoolCreated");
+        });
+
+        it("should returns the pool created", async function () {
+          const pools = await manager.fetchPools(0, 1);
+          expect(pools[0].length).to.equal(1);
+        });
+      });
+
+      describe("when you are multiple pools", () => {
+        beforeEach(async () =>{
+          await manager.connect(nonProfitCouncil).createPool(token.address);
+          await manager.connect(nonProfitCouncil).createPool(token.address);
+          await manager.connect(nonProfitCouncil).createPool(token.address);
+        });
+
+        it("should increase pools length by 3", async function () {
+          const pools = await manager.fetchPools(0, 6);
+          expect(pools[0].length).to.equal(3);
         });
       });
   
@@ -230,21 +252,21 @@ describe("Manager", function () {
       });
 
       it('should remove the integration balance', async () => {
-        await manager.connect(integration).donateThroughIntegration(pool.address, nonProfit.address, user, 100);
+        await manager.connect(integration).donateThroughIntegration(pool.address, nonProfit.address, integration.address, donation_batch, 100);
         const integrationBalance = await manager.integrations(integration.address);
         expect(integrationBalance).to.eq(0);
       });
 
       it('should add the amount to the non profit balance', async () => {
-        await manager.connect(integration).donateThroughIntegration(pool.address, nonProfit.address, user, 100);
+        await manager.connect(integration).donateThroughIntegration(pool.address, nonProfit.address, integration.address, donation_batch, 100);
         const nonProfitBalance = await token.balanceOf(nonProfit.address);
         expect(nonProfitBalance).to.eq(100);
       });
 
       it('should emit DonationAdded event', async () => {
-        expect(await manager.connect(integration).donateThroughIntegration(pool.address, nonProfit.address, user, 100))
+        expect(await manager.connect(integration).donateThroughIntegration(pool.address, nonProfit.address, integration.address, donation_batch, 100))
           .to.emit(manager, "DonationAdded")
-          .withArgs(pool.address, user, integration.address, nonProfit.address, 100);
+          .withArgs(pool.address, nonProfit.address, integration.address, donation_batch, 100);
       });
     });
   });

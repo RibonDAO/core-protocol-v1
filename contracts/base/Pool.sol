@@ -20,7 +20,6 @@ contract Pool is IPool {
     event NonProfitRemoved(address nonProfit);
     event BalanceIncreased(address promoter, uint256 amount);
     event DonationAdded(
-        bytes32 user,
         address integration,
         address nonProfit,
         uint256 amount
@@ -52,7 +51,6 @@ contract Pool is IPool {
     function donateThroughIntegration(
         address _nonProfit,
         address _integration,
-        bytes32 _user,
         uint256 _amount
     ) external {
         require(
@@ -67,7 +65,7 @@ contract Pool is IPool {
         
         token.safeTransfer(_nonProfit, _amount); 
 
-        emit DonationAdded(_user, _integration, _nonProfit, _amount);
+        emit DonationAdded(_integration, _nonProfit, _amount);
     }
 
     function transferBalance(address _wallet) external {
