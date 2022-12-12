@@ -50,7 +50,7 @@ contract Manager {
 
     function createPool(address _token) external returns (address) {
         require(msg.sender == nonProfitCouncil, "You are not the non profit council");
-        address pool = address(new Pool(_token, msg.sender));
+        address pool = address(new Pool(_token, address(this)));
         pools.push(pool);
         emit PoolCreated(pool, _token);
         return pool;
