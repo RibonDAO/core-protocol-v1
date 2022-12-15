@@ -16,6 +16,7 @@ contract Manager {
     address public nonProfitCouncil;
     address public governanceCouncil;
     uint public poolFee;
+    uint public contributionFee;
 
     mapping(address => uint256) public integrations;
     address[] public pools;
@@ -43,12 +44,14 @@ contract Manager {
         address _governanceCouncil,
         address _integrationCouncil,
         address _nonProfitCouncil,
-        uint _poolFee
+        uint _poolFee,
+        uint _contributionFee
     ) {
         governanceCouncil = _governanceCouncil;
         integrationCouncil = _integrationCouncil;
         nonProfitCouncil = _nonProfitCouncil;
         poolFee = _poolFee;
+        contributionFee = _contributionFee;
     }
 
     function createPool(address _token) external returns (address) {
@@ -79,9 +82,9 @@ contract Manager {
         IERC20 token = IERC20(pool.token());
         uint feeAmount = 0;
         uint poolBalance = token.balanceOf(_pool);
+
         if(feeable && poolBalance > 0) {        
             uint chargableFee = (_amount * (poolFee * 100)) / 10000;
-            console.log(chargableFee, poolFee);
             if (chargableFee > poolBalance) {
                 feeAmount = poolBalance;
             } else {
@@ -177,6 +180,38 @@ contract Manager {
         emit NonProfitCouncilChanged(nonProfitCouncil);
     }
 
+    function contributeToNonProfit(
+        address _pool,
+        address _nonProfit,
+        uint256 _amount,
+        address _referrer
+    ) external {
+        require(_amount > 0, "Amount must be greater than 0");
+        
+        IPool pool = IPool(_pool);
+        IERC20 token = IERC20(pool.token());
+        uint poolBalance = token.balanceOf(_pool);
+
+        if(poolBalance > 0) {
+            uint feeAmount = 0;
+            uint chargableFee = (_amount * (contributionFee * 100)) / 10000;
+            
+            if (chargableFee > poolBalance) {
+                feeAmount = poolBalance;
+            } else {
+                feeAmount = chargableFee;
+            }
+
+            pool.payFee(_referrer, feeAmount);
+        }
+
+        if (pool.nonProfits(_nonProfit)) {
+            token.safeTransferFrom(msg.sender, _nonProfit, _amount);
+        } else {
+            revert ("Non profit is not whitelisted");
+        }
+    }
+
     function setIntegrationCouncil(address _integrationCouncil) external {
         require(
             msg.sender == governanceCouncil,
@@ -209,5 +244,14 @@ contract Manager {
         pool.transferBalance(_wallet);
 
         emit PoolBalanceTransfered(_pool, _wallet);
+    }
+
+    function setPoolFee(uint _poolFee) external {
+        require(
+            msg.sender == governanceCouncil,
+            "You are not the governance council"
+        );
+
+        poolFee = _poolFee;
     }
 }
