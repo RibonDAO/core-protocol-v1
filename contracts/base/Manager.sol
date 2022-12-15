@@ -8,13 +8,14 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IPool.sol";
 import "./Pool.sol";
-
+import "hardhat/console.sol";
 
 contract Manager {
     using SafeERC20 for IERC20;
     address public integrationCouncil;
     address public nonProfitCouncil;
     address public governanceCouncil;
+    uint public poolFee;
 
     mapping(address => uint256) public integrations;
     address[] public pools;
@@ -41,11 +42,13 @@ contract Manager {
     constructor(
         address _governanceCouncil,
         address _integrationCouncil,
-        address _nonProfitCouncil
+        address _nonProfitCouncil,
+        uint _poolFee
     ) {
         governanceCouncil = _governanceCouncil;
         integrationCouncil = _integrationCouncil;
         nonProfitCouncil = _nonProfitCouncil;
+        poolFee = _poolFee;
     }
 
     function createPool(address _token) external returns (address) {
@@ -69,12 +72,23 @@ contract Manager {
         return (_pools, _index + _length);
     }
 
-    function addPoolBalance(address _pool, uint256 _amount) external {
+    function addPoolBalance(address _pool, uint256 _amount, address _referrer, bool feeable) external {
         require(_amount > 0, "Amount must be greater than 0");
         
-
         IPool pool = IPool(_pool);
         IERC20 token = IERC20(pool.token());
+        uint feeAmount = 0;
+        uint poolBalance = token.balanceOf(_pool);
+        if(feeable && poolBalance > 0) {        
+            uint chargableFee = (_amount * (poolFee * 100)) / 10000;
+            console.log(chargableFee, poolFee);
+            if (chargableFee > poolBalance) {
+                feeAmount = poolBalance;
+            } else {
+                feeAmount = chargableFee;
+            }
+            pool.payFee(_referrer, feeAmount);
+        }
         
         token.safeTransferFrom(msg.sender, _pool, _amount);
 

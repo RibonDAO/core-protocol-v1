@@ -9,4 +9,5 @@ interface IPool {
     function addNonProfitToWhitelist(address) external;
     function removeNonProfitFromWhitelist(address) external;
     function transferBalance(address) external;
+    function payFee(address, uint) external;
 }

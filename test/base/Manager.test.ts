@@ -20,7 +20,7 @@ describe("Manager", function () {
     token: TestERC20,
   }> = async (wallets, provider) => {
     const managerFactory = await ethers.getContractFactory('Manager')
-    const manager = (await managerFactory.deploy(wallets[0].address, wallets[1].address, wallets[2].address)) as Manager
+    const manager = (await managerFactory.deploy(wallets[0].address, wallets[1].address, wallets[2].address, 10)) as Manager
 
     const tokenFactory = await ethers.getContractFactory('TestERC20')
     const token = (await tokenFactory.deploy(100000)) as TestERC20
@@ -100,37 +100,100 @@ describe("Manager", function () {
   });
 
   describe("#addPoolBalance", () => {
-    describe("when you have suficient balance", () => {
-      beforeEach(async () =>{
-        await token.approve(manager.address, 10);
-        await manager.addPoolBalance(pool.address, 10);
-      });
+    describe("when you feeable is false", () => {
+      describe("when you have suficient balance", () => {
+        beforeEach(async () =>{
+          await token.approve(manager.address, 10);
+          await manager.addPoolBalance(pool.address, 10, integration.address, false);
+        });
 
-      it("should increase contract donation token's balance", async function () {
-        const balance = await token.balanceOf(pool.address);
-        expect(balance).to.equal(10);
-      });
+        it("should increase contract donation token's balance", async function () {
+          const balance = await token.balanceOf(pool.address);
+          expect(balance).to.equal(10);
+        });
 
-      it("should increase donation pool balance", async function () {
-        const balance = await token.balanceOf(pool.address);
-        expect(balance).to.equal(10);
-      });
+        it("should increase donation pool balance", async function () {
+          const balance = await token.balanceOf(pool.address);
+          expect(balance).to.equal(10);
+        });
 
-      it("emits PoolBalanceIncreased event", async function () {
-        await manager.connect(nonProfitCouncil).createPool(token.address);
-        const pools = await manager.fetchPools(0,1);
-        await token.approve(manager.address, 10);
+        it("emits PoolBalanceIncreased event", async function () {
+          await manager.connect(nonProfitCouncil).createPool(token.address);
+          const pools = await manager.fetchPools(0,1);
+          await token.approve(manager.address, 10);
 
-        await expect(manager.addPoolBalance(pool.address, 10))
-          .to.emit(manager, "PoolBalanceIncreased")
-          .withArgs(governanceCouncil.address, pool.address, 10);
+          await expect(manager.addPoolBalance(pool.address, 10, integration.address, false))
+            .to.emit(manager, "PoolBalanceIncreased")
+            .withArgs(governanceCouncil.address, pool.address, 10);
+        });
       });
     });
-    
+
+    describe("when you feeable is true", () => {
+      describe("when you have suficient balance in the pool", () => {
+        beforeEach(async () =>{
+          await token.approve(manager.address, 20);
+          await manager.addPoolBalance(pool.address, 10, integration.address, false);
+          await manager.addPoolBalance(pool.address, 10, integration.address, true);
+        });
+        
+        describe("when the pool have suficient balance", () => {
+          it("should increase donation pool balance", async function () {
+            const balance = await token.balanceOf(pool.address);
+            expect(balance).to.equal(19);
+          });
+
+          it("should increase referrer balance", async function () {
+            const balance = await token.balanceOf(integration.address);
+            expect(balance).to.equal(1);
+          });
+        });
+      });
+
+      describe("when you dont have suficient balance in the pool", () => {
+        beforeEach(async () =>{
+          await token.approve(manager.address, 2000);
+          await manager.addPoolBalance(pool.address, 10, integration.address, false);
+          await manager.addPoolBalance(pool.address, 1000, integration.address, true);
+        });
+        
+        describe("when the pool have suficient balance", () => {
+          it("should increase donation pool balance", async function () {
+            const balance = await token.balanceOf(pool.address);
+            expect(balance).to.equal(1000);
+          });
+  
+          it("should increase referrer balance", async function () {
+            const balance = await token.balanceOf(integration.address);
+            expect(balance).to.equal(10);
+          });
+        });
+      });
+
+      describe("when you dont have token in the pool", () => {
+        beforeEach(async () =>{
+          await token.approve(manager.address, 1000);
+          await manager.addPoolBalance(pool.address, 1000, integration.address, true);
+        });
+        
+        describe("when the pool have suficient balance", () => {
+          it("should increase donation pool balance", async function () {
+            const balance = await token.balanceOf(pool.address);
+            expect(balance).to.equal(1000);
+          });
+  
+          it("should increase referrer balance", async function () {
+            const balance = await token.balanceOf(integration.address);
+            expect(balance).to.equal(0);
+          });
+        });
+      });
+    });      
+
     describe("when amount is 0", () => {
       it("reverts the transaction", async function () {
         await expect(
-          manager.addPoolBalance(manager.address, 0)
+          manager.addPoolBalance(manager.address, 0, integration.address, false)
         ).to.be.revertedWith("Amount must be greater than 0");
       });
     });
@@ -248,7 +311,7 @@ describe("Manager", function () {
         await manager.connect(integrationCouncil).addIntegrationBalance(integration.address, 100);
         await manager.connect(nonProfitCouncil).addNonProfitToWhitelist(pool.address, nonProfit.address);
         await token.approve(manager.address, 100);
-        await manager.addPoolBalance(pool.address, 100);
+        await manager.addPoolBalance(pool.address, 100, integration.address, false);
       });
 
       it('should remove the integration balance', async () => {
@@ -322,7 +385,7 @@ describe("Manager", function () {
     describe('when the caller is the governance council', () => {
       it('should change balances', async () => {
         await token.approve(manager.address, 100);
-        await manager.addPoolBalance(pool.address, 100);
+        await manager.addPoolBalance(pool.address, 100, integration.address, false);
         await manager.connect(governanceCouncil).transferPoolBalance(pool.address, nonProfitCouncil.address);
         expect(await token.balanceOf(pool.address)).to.eq(0);
         expect(await token.balanceOf(nonProfitCouncil.address)).to.eq(100);
