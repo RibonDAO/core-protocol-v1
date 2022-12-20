@@ -255,6 +255,11 @@ contract Manager {
             "You are not the governance council"
         );
 
+        require(
+            _poolIncreaseFee < 50,
+            "The fee is too high"
+        );
+
         poolIncreaseFee = _poolIncreaseFee;
 
         emit PoolIncreaseFeeChanged(poolIncreaseFee);
@@ -264,6 +269,11 @@ contract Manager {
         require(
             msg.sender == governanceCouncil,
             "You are not the governance council"
+        );
+
+        require(
+            _directlyContributionFee < 50,
+            "The fee is too high"
         );
 
         directlyContributionFee = _directlyContributionFee;

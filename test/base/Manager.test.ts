@@ -523,6 +523,12 @@ describe("Manager", function () {
           .to.be.revertedWith("You are not the governance council");
       });
     });
+    describe('when fee bigger than 50', () => {
+      it('should revert', async () => {
+        await expect(manager.connect(governanceCouncil).setPoolIncreaseFee(50))
+          .to.be.revertedWith("The fee is too high");
+      });
+    });
   });
 
   describe('#setDirectlyContributionFee', () => {
@@ -536,6 +542,12 @@ describe("Manager", function () {
       it('should revert', async () => {
         await expect(manager.connect(nonProfitCouncil).setDirectlyContributionFee(10))
           .to.be.revertedWith("You are not the governance council");
+      });
+    });
+    describe('when fee bigger than 50', () => {
+      it('should revert', async () => {
+        await expect(manager.connect(governanceCouncil).setDirectlyContributionFee(50))
+          .to.be.revertedWith("The fee is too high");
       });
     });
   });
