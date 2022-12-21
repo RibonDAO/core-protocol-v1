@@ -52,6 +52,14 @@ contract Manager {
         uint _poolIncreaseFee,
         uint _directlyContributionFee
     ) {
+        require(
+            _poolIncreaseFee < 50,
+            "PoolIncreaseFee is too high"
+        );
+        require(
+            _directlyContributionFee < 50,
+            "DirectlyContributionFee is too high"
+        );
         governanceCouncil = _governanceCouncil;
         integrationCouncil = _integrationCouncil;
         nonProfitCouncil = _nonProfitCouncil;

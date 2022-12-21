@@ -53,53 +53,86 @@ describe("Manager", function () {
     ;({ manager, pool, token } = await loadFixture(fixture))
   })
 
+  describe("#constructor", () => {
+    describe("when params are valid", () => {
+      it("should create the contract", async function () {
+        const [owner] = await (ethers as any).getSigners();
+        const managerFactory = await ethers.getContractFactory('Manager')
+        const manager = (await managerFactory.deploy(owner.address, owner.address, owner.address, 10, 10));
+        
+        expect(await manager.governanceCouncil()).to.equal(owner.address);
+        expect(await manager.integrationCouncil()).to.equal(owner.address);
+        expect(await manager.nonProfitCouncil()).to.equal(owner.address);
+        expect(await manager.poolIncreaseFee()).to.equal(10);
+        expect(await manager.directlyContributionFee()).to.equal(10);
+      })
+    });
+    describe("when pool fee is higher than 50", () => {
+      it("reverts the transaction", async function () {
+        const [owner] = await (ethers as any).getSigners();
+        const managerFactory = await ethers.getContractFactory('Manager')
+        await expect(
+          managerFactory.deploy(owner.address, owner.address, owner.address, 75, 10)
+        ).to.be.revertedWith('PoolIncreaseFee is too high');
+      });
+    });
+
+    describe("when contribution fee is higher than 50", () => {
+      it("reverts the transaction", async function () {
+        const [owner] = await (ethers as any).getSigners();
+        const managerFactory = await ethers.getContractFactory('Manager')
+        await expect(
+          managerFactory.deploy(owner.address, owner.address, owner.address, 10, 75)
+        ).to.be.revertedWith("DirectlyContributionFee is too high");
+      });
+    });
+  });
+
   describe("#createPool", () => {
-    describe("#createPool", () => {
-      describe("when you are the manager", () => {
+    describe("when you are the manager", () => {
 
-        beforeEach(async () =>{
-          await manager.connect(nonProfitCouncil).createPool(token.address);
-        });
-  
-        it("should increase pools length by 1", async function () {
-          const pools = await manager.fetchPools(0, 3);
-          expect(pools[0].length).to.equal(2);
-        });
-
-        it("should add exist pool mapping as true", async function () {
-          const pools = await manager.fetchPools(0, 3);
-          expect(await manager.existPool(pools[0][1])).to.equal(true);
-        });
-  
-        it("emits PoolCreated event", async function () {
-          await expect(manager.connect(nonProfitCouncil).createPool(token.address))
-            .to.emit(manager, "PoolCreated");
-        });
-
-        it("should returns the pool created", async function () {
-          const pools = await manager.fetchPools(0, 3);
-          expect(pools[0].length).to.equal(2);
-        });
+      beforeEach(async () =>{
+        await manager.connect(nonProfitCouncil).createPool(token.address);
       });
 
-      describe("when you are multiple pools", () => {
-        beforeEach(async () =>{
-          await manager.connect(nonProfitCouncil).createPool(token.address);
-          await manager.connect(nonProfitCouncil).createPool(token.address);
-          await manager.connect(nonProfitCouncil).createPool(token.address);
-        });
-
-        it("should increase pools length by 3", async function () {
-          const pools = await manager.fetchPools(0, 6);
-          expect(pools[0].length).to.equal(4);
-        });
+      it("should increase pools length by 1", async function () {
+        const pools = await manager.fetchPools(0, 3);
+        expect(pools[0].length).to.equal(2);
       });
-  
-      describe("when you are not the manager", () => {
-        it("reverts the transaction", async function () {
-          await expect(manager.connect(nonProfit).createPool(token.address))
-            .to.be.revertedWith("You are not the non profit council");
-        });
+
+      it("should add exist pool mapping as true", async function () {
+        const pools = await manager.fetchPools(0, 3);
+        expect(await manager.existPool(pools[0][1])).to.equal(true);
+      });
+
+      it("emits PoolCreated event", async function () {
+        await expect(manager.connect(nonProfitCouncil).createPool(token.address))
+          .to.emit(manager, "PoolCreated");
+      });
+
+      it("should returns the pool created", async function () {
+        const pools = await manager.fetchPools(0, 3);
+        expect(pools[0].length).to.equal(2);
+      });
+    });
+
+    describe("when you are multiple pools", () => {
+      beforeEach(async () =>{
+        await manager.connect(nonProfitCouncil).createPool(token.address);
+        await manager.connect(nonProfitCouncil).createPool(token.address);
+        await manager.connect(nonProfitCouncil).createPool(token.address);
+      });
+
+      it("should increase pools length by 3", async function () {
+        const pools = await manager.fetchPools(0, 6);
+        expect(pools[0].length).to.equal(4);
+      });
+    });
+
+    describe("when you are not the manager", () => {
+      it("reverts the transaction", async function () {
+        await expect(manager.connect(nonProfit).createPool(token.address))
+          .to.be.revertedWith("You are not the non profit council");
       });
     });
   });
