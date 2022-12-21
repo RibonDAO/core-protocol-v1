@@ -24,9 +24,11 @@ describe("Manager", function () {
 
     const tokenFactory = await ethers.getContractFactory('TestERC20')
     const token = (await tokenFactory.deploy(100000)) as TestERC20
-
+  
+    await manager.connect(wallets[2]).createPool(token.address);
+    const poolAddress = await manager.fetchPools(0,1);
     const poolFactory = await ethers.getContractFactory('Pool')
-    const pool = (await poolFactory.deploy(token.address, manager.address)) as Pool
+    const pool = poolFactory.attach(poolAddress[0][0]);
 
     return {
       manager,
@@ -38,8 +40,6 @@ describe("Manager", function () {
   let manager: Manager;
   let pool: Pool;
   let token: TestERC20;
-
-  let poolAddress;
 
   let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
@@ -58,12 +58,17 @@ describe("Manager", function () {
       describe("when you are the manager", () => {
 
         beforeEach(async () =>{
-          poolAddress = await manager.connect(nonProfitCouncil).createPool(token.address);
+          await manager.connect(nonProfitCouncil).createPool(token.address);
         });
   
         it("should increase pools length by 1", async function () {
-          const pools = await manager.fetchPools(0, 1);
-          expect(pools[0].length).to.equal(1);
+          const pools = await manager.fetchPools(0, 3);
+          expect(pools[0].length).to.equal(2);
+        });
+
+        it("should add exist pool mapping as true", async function () {
+          const pools = await manager.fetchPools(0, 3);
+          expect(await manager.existPool(pools[0][1])).to.equal(true);
         });
   
         it("emits PoolCreated event", async function () {
@@ -72,8 +77,8 @@ describe("Manager", function () {
         });
 
         it("should returns the pool created", async function () {
-          const pools = await manager.fetchPools(0, 1);
-          expect(pools[0].length).to.equal(1);
+          const pools = await manager.fetchPools(0, 3);
+          expect(pools[0].length).to.equal(2);
         });
       });
 
@@ -86,7 +91,7 @@ describe("Manager", function () {
 
         it("should increase pools length by 3", async function () {
           const pools = await manager.fetchPools(0, 6);
-          expect(pools[0].length).to.equal(3);
+          expect(pools[0].length).to.equal(4);
         });
       });
   
@@ -203,8 +208,16 @@ describe("Manager", function () {
     describe("when amount is 0", () => {
       it("reverts the transaction", async function () {
         await expect(
-          manager.addPoolBalance(manager.address, 0, integrationController.address, false)
+          manager.addPoolBalance(pool.address, 0, integrationController.address, false)
         ).to.be.revertedWith("Amount must be greater than 0");
+      });
+    });
+
+    describe("when the pool does not exist", () => {
+      it("reverts the transaction", async function () {
+        await expect(
+          manager.addPoolBalance(manager.address, 10, integrationController.address, false)
+        ).to.be.revertedWith("Pool does not exist");
       });
     });
   });
@@ -439,8 +452,16 @@ describe("Manager", function () {
     describe("when amount is 0", () => {
       it("reverts the transaction", async function () {
         await expect(
-          manager.addPoolBalance(manager.address, 0, integrationController.address, false)
+          manager.contributeToNonProfit(pool.address, nonProfit.address, 0, integrationController.address)
         ).to.be.revertedWith("Amount must be greater than 0");
+      });
+    });
+
+    describe("when the pool does not exist", () => {
+      it("reverts the transaction", async function () {
+        await expect(
+          manager.contributeToNonProfit(manager.address, nonProfit.address, 10, integrationController.address)
+        ).to.be.revertedWith("Pool does not exist");
       });
     });
   });

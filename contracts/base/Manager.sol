@@ -19,7 +19,9 @@ contract Manager {
     uint public directlyContributionFee;
 
     mapping(address => uint256) public integrationControllers;
+    
     address[] public pools;
+    mapping(address=>bool) public existPool;
 
     event PoolCreated(address pool, address token);
     event PoolBalanceIncreased(address promoter, address pool, uint amount);
@@ -61,6 +63,8 @@ contract Manager {
         require(msg.sender == nonProfitCouncil, "You are not the non profit council");
         address pool = address(new Pool(_token, address(this)));
         pools.push(pool);
+        existPool[pool] = true;
+
         emit PoolCreated(pool, _token);
         return pool;
     }
@@ -80,10 +84,11 @@ contract Manager {
 
     function addPoolBalance(address _pool, uint256 _amount, address _referrer, bool feeable) external {
         require(_amount > 0, "Amount must be greater than 0");
-        
+        require(existPool[_pool], "Pool does not exist");
+
         IPool pool = IPool(_pool);
         IERC20 token = IERC20(pool.token());
-        uint feeAmount = 0;
+        uint feeAmount;
         uint poolBalance = token.balanceOf(_pool);
 
         if(feeable && poolBalance > 0) {        
@@ -190,7 +195,8 @@ contract Manager {
         address _referrer
     ) external {
         require(_amount > 0, "Amount must be greater than 0");
-        
+        require(existPool[_pool], "Pool does not exist");
+
         IPool pool = IPool(_pool);
         IERC20 token = IERC20(pool.token());
         uint poolBalance = token.balanceOf(_pool);
