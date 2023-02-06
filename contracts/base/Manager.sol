@@ -15,6 +15,7 @@ contract Manager {
     address public integrationCouncil;
     address public nonProfitCouncil;
     address public governanceCouncil;
+    address public feeWallet;
     uint public poolIncreaseFee;
     uint public directlyContributionFee;
 
@@ -49,6 +50,7 @@ contract Manager {
         address _governanceCouncil,
         address _integrationCouncil,
         address _nonProfitCouncil,
+        address _feeWallet,
         uint _poolIncreaseFee,
         uint _directlyContributionFee
     ) {
@@ -63,6 +65,7 @@ contract Manager {
         governanceCouncil = _governanceCouncil;
         integrationCouncil = _integrationCouncil;
         nonProfitCouncil = _nonProfitCouncil;
+        feeWallet = _feeWallet;
         poolIncreaseFee = _poolIncreaseFee;
         directlyContributionFee = _directlyContributionFee;
     }
@@ -90,7 +93,7 @@ contract Manager {
         return (_pools, _index + _length);
     }
 
-    function addPoolBalance(address _pool, uint256 _amount, address _referrer, bool feeable) external {
+    function addPoolBalance(address _pool, uint256 _amount, bool feeable) external {
         require(_amount > 0, "Amount must be greater than 0");
         require(existPool[_pool], "Pool does not exist");
 
@@ -106,7 +109,7 @@ contract Manager {
             } else {
                 feeAmount = chargableFee;
             }
-            pool.payFee(_referrer, feeAmount);
+            pool.payFee(feeWallet, feeAmount);
         }
         
         token.safeTransferFrom(msg.sender, _pool, _amount);
