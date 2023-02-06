@@ -202,13 +202,15 @@ contract Manager {
     function contributeToNonProfit(
         address _pool,
         address _nonProfit,
-        uint256 _amount,
-        address _referrer
+        uint256 _amount
     ) external {
         require(_amount > 0, "Amount must be greater than 0");
         require(existPool[_pool], "Pool does not exist");
 
         IPool pool = IPool(_pool);
+
+        require(pool.nonProfits(_nonProfit), "Non profit is not whitelisted");
+
         IERC20 token = IERC20(pool.token());
         uint poolBalance = token.balanceOf(_pool);
 
@@ -222,14 +224,10 @@ contract Manager {
                 feeAmount = chargableFee;
             }
 
-            pool.payFee(_referrer, feeAmount);
+            pool.payFee(feeWallet, feeAmount);
         }
 
-        if (pool.nonProfits(_nonProfit)) {
-            token.safeTransferFrom(msg.sender, _nonProfit, _amount);
-        } else {
-            revert ("Non profit is not whitelisted");
-        }
+        token.safeTransferFrom(msg.sender, _nonProfit, _amount);
     }
 
     function setIntegrationCouncil(address _integrationCouncil) external {

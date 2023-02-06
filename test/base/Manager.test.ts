@@ -398,7 +398,7 @@ describe("Manager", function () {
           await token.approve(manager.address, 20);
           await manager.connect(nonProfitCouncil).addNonProfitToWhitelist(pool.address, nonProfit.address);
           await manager.addPoolBalance(pool.address, 10, false);
-          await manager.contributeToNonProfit(pool.address, nonProfit.address, 10, integrationController.address);
+          await manager.contributeToNonProfit(pool.address, nonProfit.address, 10);
         });
 
         it("should increase nonProfit token's balance", async function () {
@@ -411,8 +411,8 @@ describe("Manager", function () {
           expect(balance).to.equal(9);
         });
 
-        it("should increase integration balance", async function () {
-          const balance = await token.balanceOf(integrationController.address);
+        it("should increase fee wallet balance", async function () {
+          const balance = await token.balanceOf(feeWallet.address);
           expect(balance).to.equal(1);
         });
       });
@@ -424,7 +424,7 @@ describe("Manager", function () {
           await token.approve(manager.address, 2000);
           await manager.connect(nonProfitCouncil).addNonProfitToWhitelist(pool.address, nonProfit.address);
           await manager.addPoolBalance(pool.address, 10, false);
-          await manager.contributeToNonProfit(pool.address, nonProfit.address, 1000, integrationController.address);
+          await manager.contributeToNonProfit(pool.address, nonProfit.address, 1000);
         });
 
         it("should increase nonProfit token's balance", async function () {
@@ -438,7 +438,7 @@ describe("Manager", function () {
         });
 
         it("should increase integration balance", async function () {
-          const balance = await token.balanceOf(integrationController.address);
+          const balance = await token.balanceOf(feeWallet.address);
           expect(balance).to.equal(10);
         });
       });
@@ -449,7 +449,7 @@ describe("Manager", function () {
         beforeEach(async () =>{
           await token.approve(manager.address, 10);
           await manager.connect(nonProfitCouncil).addNonProfitToWhitelist(pool.address, nonProfit.address);
-          await manager.contributeToNonProfit(pool.address, nonProfit.address, 10, integrationController.address);
+          await manager.contributeToNonProfit(pool.address, nonProfit.address, 10);
         });
 
         it("should increase nonProfit token's balance", async function () {
@@ -462,8 +462,8 @@ describe("Manager", function () {
           expect(balance).to.equal(0);
         });
 
-        it("should increase integration balance", async function () {
-          const balance = await token.balanceOf(integrationController.address);
+        it("should increase fee wallet balance", async function () {
+          const balance = await token.balanceOf(feeWallet.address);
           expect(balance).to.equal(0);
         });
       });
@@ -477,7 +477,7 @@ describe("Manager", function () {
 
         it("reverts the transaction", async function () {
           await expect(
-            manager.contributeToNonProfit(pool.address, nonProfit.address, 10, integrationController.address)
+            manager.contributeToNonProfit(pool.address, nonProfit.address, 10)
           ).to.be.revertedWith("Non profit is not whitelisted");
         });
       });
@@ -486,7 +486,7 @@ describe("Manager", function () {
     describe("when amount is 0", () => {
       it("reverts the transaction", async function () {
         await expect(
-          manager.contributeToNonProfit(pool.address, nonProfit.address, 0, integrationController.address)
+          manager.contributeToNonProfit(pool.address, nonProfit.address, 0)
         ).to.be.revertedWith("Amount must be greater than 0");
       });
     });
@@ -494,7 +494,7 @@ describe("Manager", function () {
     describe("when the pool does not exist", () => {
       it("reverts the transaction", async function () {
         await expect(
-          manager.contributeToNonProfit(manager.address, nonProfit.address, 10, integrationController.address)
+          manager.contributeToNonProfit(manager.address, nonProfit.address, 10)
         ).to.be.revertedWith("Pool does not exist");
       });
     });
