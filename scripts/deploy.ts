@@ -7,7 +7,9 @@ async function main() {
   const manager = await ManagerContract.deploy(
     owner.address,
     owner.address,
-    owner.address
+    owner.address,
+    10,
+    10
   );
   await manager.deployed();
 

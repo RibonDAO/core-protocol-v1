@@ -158,4 +158,42 @@ describe("Pool", function () {
       });
     });
   });
+
+  describe("#payFee", () => {
+    beforeEach(async () =>{
+      await pool.addNonProfitToWhitelist(nonProfit.address);
+      await token.approve(manager.address, 10);
+      await token.transferFrom(manager.address, pool.address, 10);
+    });
+
+    describe("when you are the manager", () => {
+      describe("when the amount is bigger than 0", () => {
+        it("decreases the pool balance", async function () {
+          expect(await token.balanceOf(pool.address)).to.equal(10);
+          await pool.connect(manager).payFee(integration.address, 10);
+          expect(await token.balanceOf(pool.address)).to.equal(0);
+        });
+
+        it("emits FeePaid event", async function () {
+          await expect(pool.connect(manager).payFee(integration.address, 10))
+            .to.emit(pool, "FeePaid")
+            .withArgs(integration.address, 10);
+        });
+      });
+
+      describe("when the amount is 0", () => {
+        it("reverts the transaction", async function () {
+          await expect(pool.connect(manager).payFee(integration.address, 0))
+            .to.be.revertedWith("Amount must be greater than 0");
+        });
+      });
+    });
+
+    describe("when you are not the manager", () => {
+      it("reverts the transaction", async function () {
+        await expect(pool.connect(nonProfit).payFee(integration.address, 10))
+          .to.be.revertedWith("You are not the manager");
+      });
+    });
+  });
 });

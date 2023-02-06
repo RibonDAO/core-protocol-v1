@@ -24,6 +24,10 @@ contract Pool is IPool {
         address nonProfit,
         uint256 amount
     );
+    event FeePaid(
+        address integration,
+        uint256 amount
+    );
 
     event BalanceTransfered(address wallet, uint amount);
 
@@ -78,5 +82,17 @@ contract Pool is IPool {
         token.safeTransfer(_wallet, _amount);
 
         emit BalanceTransfered(_wallet, _amount);
+    }
+
+    function payFee(address referrer, uint256 amount) external {
+        require(
+            msg.sender == manager,
+            "You are not the manager"
+        );
+        require(amount > 0, "Amount must be greater than 0");
+
+        token.safeTransfer(referrer, amount);
+
+        emit FeePaid(referrer, amount);
     }
 }
